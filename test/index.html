@@ -606,10 +606,8 @@
       <option value="groq">Groq</option>
     </select>
 
-    <label id="api-key-label">OPENAI API KEY</label>
+<label id="api-key-label">OPENAI API KEY</label>
 <input type="password" id="api-key-input" placeholder="sk-..." autocomplete="off" />
-
-    <input type="text" id="chat-text" style="display: none;" />
 
     <button class="btn-primary" onclick="handleApiKey()">הפעל מערכת ▶</button>
     <div class="error-msg" id="api-error"></div>
@@ -667,6 +665,7 @@
 <div class="chat-bottom">
     <div class="transcript-indicator" id="transcript-indicator"></div>
     <div class="chat-input-inner" style="justify-content: center;">
+      <input type="text" id="chat-text" class="chat-textinput" placeholder="הקלד הודעה... או לחץ על המיקרופון" />
       <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="לחץ לדיבור">🎤</button>
     </div>
   </div>
@@ -1201,6 +1200,16 @@ window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoice
 // Initialize on page load
 checkSavedApiKey();
 loadFaces();
+
+// Add keyboard support for chat input
+document.getElementById('chat-text').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const text = e.target.value.trim();
+    if (text) {
+      sendMessage(text);
+    }
+  }
+});
 </script>
 </body>
 </html>
