@@ -681,6 +681,8 @@ let isSpeaking = false;
 let recognition = null;
 let currentUtterance = null;
 let streamController = null;
+let silenceTimer = null;
+const SILENCE_TIMEOUT = 5000;
 
 // =========== COOKIE FUNCTIONS ===========
 function setCookie(name, value, days = 365) {
@@ -1133,9 +1135,26 @@ function startRecording() {
     if (final) {
       document.getElementById('chat-text').value = final;
     }
+
+    // Reset silence timer on every speech result
+    clearTimeout(silenceTimer);
+    let remaining = SILENCE_TIMEOUT / 1000;
+    setStatus(`מאזין... (שולח בעוד ${remaining}s)`);
+    silenceTimer = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(silenceTimer);
+        silenceTimer = null;
+        if (isRecording) recognition.stop();
+      } else {
+        setStatus(`מאזין... (שולח בעוד ${remaining}s)`);
+      }
+    }, 1000);
   };
 
   recognition.onend = () => {
+    clearInterval(silenceTimer);
+    silenceTimer = null;
     isRecording = false;
     document.getElementById('mic-btn').classList.remove('recording');
     document.getElementById('mic-btn').textContent = '🎤';
@@ -1154,6 +1173,8 @@ function startRecording() {
   };
 
   recognition.onerror = (e) => {
+    clearInterval(silenceTimer);
+    silenceTimer = null;
     isRecording = false;
     document.getElementById('mic-btn').classList.remove('recording');
     document.getElementById('mic-btn').textContent = '🎤';
