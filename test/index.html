@@ -1137,18 +1137,13 @@ function startRecording() {
     }
 
     // Reset silence timer on every speech result
-    clearInterval(silenceTimer);
-    let remaining = SILENCE_TIMEOUT / 1000;
-    setStatus(`מאזין... (שולח בעוד ${remaining}s)`);
-    silenceTimer = setInterval(() => {
-      remaining--;
-      setStatus(`מאזין... (שולח בעוד ${remaining}s)`);
-      if (remaining <= 0) {
-        clearInterval(silenceTimer);
-        silenceTimer = null;
-        if (isRecording) recognition.stop();
-      }
-    }, 1000);
+    clearTimeout(silenceTimer);
+    const countId = Date.now();
+    silenceTimer = countId;
+    setStatus('מאזין... (שולח בעוד 3s)');
+    setTimeout(() => { if (silenceTimer === countId) setStatus('מאזין... (שולח בעוד 2s)'); }, 1000);
+    setTimeout(() => { if (silenceTimer === countId) setStatus('מאזין... (שולח בעוד 1s)'); }, 2000);
+    setTimeout(() => { if (silenceTimer === countId && isRecording) { silenceTimer = null; recognition.stop(); } }, 3000);
   };
 
   recognition.onend = () => {
