@@ -480,48 +480,7 @@
   .chat-textinput:focus { border-color: rgba(255,255,255,0.3); }
   .chat-textinput::placeholder { color: rgba(255,255,255,0.25); }
 
-  .mic-btn {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    border: none;
-    background: #ff2200;
-    color: #fff;
-    font-size: 1.3rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    position: relative;
-  }
 
-  body.heaven .mic-btn { background: #22c55e; }
-
-  .mic-btn:hover { transform: scale(1.05); }
-  .mic-btn.recording {
-    animation: micPulse 1s infinite;
-    background: #ff5500;
-  }
-
-  body.heaven .mic-btn.recording { background: #16a34a; }
-
-  @keyframes micPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255,34,0,0.5); }
-    50% { box-shadow: 0 0 0 12px rgba(255,34,0,0); }
-  }
-
-body.heaven .mic-btn.recording { animation: micPulseGreen 1s infinite; }
-  @keyframes micPulseGreen {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
-    50% { box-shadow: 0 0 0 12px rgba(34,197,94,0); }
-  }
-
-  /* Hide text input in heaven mode - voice only */
-  body.heaven .chat-textinput { display: none; }
-
-  .send-btn {
     width: 52px;
     height: 52px;
     border-radius: 50%;
@@ -668,8 +627,7 @@ body.heaven .mic-btn.recording { animation: micPulseGreen 1s infinite; }
 <div class="chat-bottom">
     <div class="transcript-indicator" id="transcript-indicator"></div>
     <div class="chat-input-inner" style="justify-content: center;">
-      <input type="text" id="chat-text" class="chat-textinput" placeholder="הקלד הודעה... או לחץ על המיקרופון" />
-      <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="לחץ לדיבור">🎤</button>
+      <input type="text" id="chat-text" class="chat-textinput" placeholder="הקלד הודעה..." />
     </div>
   </div>
 </div>
@@ -686,7 +644,6 @@ let recognition = null;
 let currentUtterance = null;
 let streamController = null;
 let silenceTimer = null;
-const SILENCE_TIMEOUT = 3000;
 
 // =========== COOKIE FUNCTIONS ===========
 function setCookie(name, value, days = 365) {
@@ -865,6 +822,7 @@ function startChat() {
 
   addMessage('nimrod', welcomeMsg);
   speakText(welcomeMsg);
+  startRecording();
 }
 
 // =========== FACE UPDATES (fallback) ===========
@@ -1083,12 +1041,8 @@ function processQueue() {
     isSpeakingNow = false;
     if (speakQueue.length > 0) {
       processQueue();
-    } else {
-      // Auto-start mic after Nimrod finishes speaking
-      const screen = document.getElementById('screen-chat');
-      if (screen.classList.contains('active') && !isRecording) {
-        startRecording();
-      }
+    } else if (!isRecording) {
+      startRecording();
     }
   };
   utterance.onerror = () => {
@@ -1101,14 +1055,6 @@ function processQueue() {
 }
 
 // =========== MIC / SPEECH RECOGNITION ===========
-function toggleMic() {
-  if (isRecording) {
-    stopRecording();
-  } else {
-    startRecording();
-  }
-}
-
 function startRecording() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
@@ -1128,8 +1074,6 @@ function startRecording() {
 
   recognition.onstart = () => {
     isRecording = true;
-    document.getElementById('mic-btn').classList.add('recording');
-    document.getElementById('mic-btn').textContent = '⏹';
     setStatus('מאזין...');
   };
 
@@ -1158,12 +1102,10 @@ function startRecording() {
     setTimeout(() => { if (silenceTimer === countId && isRecording) { silenceTimer = null; recognition.stop(); } }, 3000);
   };
 
-recognition.onend = () => {
+  recognition.onend = () => {
     clearTimeout(silenceTimer);
     silenceTimer = null;
     isRecording = false;
-    document.getElementById('mic-btn').classList.remove('recording');
-    document.getElementById('mic-btn').textContent = '🎤';
 
     const text = document.getElementById('chat-text').value.trim();
     if (text) {
@@ -1174,17 +1116,20 @@ recognition.onend = () => {
       }, 300);
     } else {
       document.getElementById('transcript-indicator').textContent = '';
-      setStatus('מוכן לפקודות');
+      // Restart listening if not speaking
+      if (!isSpeakingNow) startRecording();
     }
   };
 
-recognition.onerror = (e) => {
+  recognition.onerror = (e) => {
     clearTimeout(silenceTimer);
     silenceTimer = null;
     isRecording = false;
-    document.getElementById('mic-btn').classList.remove('recording');
-    document.getElementById('mic-btn').textContent = '🎤';
-    setStatus('שגיאת מיקרופון: ' + e.error);
+    if (e.error !== 'no-speech' && e.error !== 'aborted') {
+      setStatus('שגיאת מיקרופון: ' + e.error);
+    } else if (!isSpeakingNow) {
+      startRecording();
+    }
   };
 
   recognition.start();
