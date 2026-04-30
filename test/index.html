@@ -902,10 +902,12 @@ async function sendMessage(text) {
   conversationHistory.push({ role: 'user', content: userText });
 
   // Stop any current speech
-  if (currentUtterance) {
-    window.speechSynthesis.cancel();
-    isSpeaking = false;
-  }
+  window.speechSynthesis.cancel();
+  isSpeakingNow = false;
+  speakQueue.length = 0;
+
+  // Stop mic while processing
+  if (recognition) recognition.stop();
 
   setStatus('חושב...');
 
@@ -1041,7 +1043,8 @@ function processQueue() {
     isSpeakingNow = false;
     if (speakQueue.length > 0) {
       processQueue();
-    } else if (!isRecording) {
+    } else {
+      lastTranscript = '';
       startRecording();
     }
   };
@@ -1055,22 +1058,20 @@ function processQueue() {
 }
 
 // =========== MIC / SPEECH RECOGNITION ===========
+let lastTranscript = '';
+
 function startRecording() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
     alert('הדפדפן לא תומך בזיהוי קול. נסה Chrome.');
     return;
   }
-
-  // Stop any speech while user is talking
-  window.speechSynthesis.cancel();
-  isSpeakingNow = false;
-  speakQueue.length = 0;
+  if (isRecording) return;
 
   recognition = new SpeechRecognition();
   recognition.lang = currentLang === 'he' ? 'he-IL' : 'en-US';
   recognition.interimResults = true;
-  recognition.continuous = false;
+  recognition.continuous = true;
 
   recognition.onstart = () => {
     isRecording = true;
@@ -1078,65 +1079,46 @@ function startRecording() {
   };
 
   recognition.onresult = (event) => {
-    let interim = '';
-    let final = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const t = event.results[i][0].transcript;
-      if (event.results[i].isFinal) final += t;
-      else interim += t;
+    let transcript = '';
+    for (let i = 0; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
     }
+    transcript = transcript.trim();
 
-    const display = final || interim;
-    document.getElementById('transcript-indicator').textContent = display ? `🎤 ${display}` : '';
-    if (final) {
-      document.getElementById('chat-text').value = final;
+    document.getElementById('transcript-indicator').textContent = transcript ? `🎤 ${transcript}` : '';
+
+    if (transcript && transcript !== lastTranscript) {
+      lastTranscript = transcript;
+      clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(() => {
+        if (lastTranscript) {
+          const toSend = lastTranscript;
+          lastTranscript = '';
+          document.getElementById('transcript-indicator').textContent = '';
+          recognition.stop();
+          sendMessage(toSend);
+        }
+      }, 3000);
     }
-
-    // Reset silence timer on every speech result
-    clearTimeout(silenceTimer);
-    const countId = Date.now();
-    silenceTimer = countId;
-    setStatus('מאזין... (שולח בעוד 3s)');
-    setTimeout(() => { if (silenceTimer === countId) setStatus('מאזין... (שולח בעוד 2s)'); }, 1000);
-    setTimeout(() => { if (silenceTimer === countId) setStatus('מאזין... (שולח בעוד 1s)'); }, 2000);
-    setTimeout(() => { if (silenceTimer === countId && isRecording) { silenceTimer = null; recognition.stop(); } }, 3000);
   };
 
   recognition.onend = () => {
-    clearTimeout(silenceTimer);
-    silenceTimer = null;
     isRecording = false;
-
-    const text = document.getElementById('chat-text').value.trim();
-    if (text) {
-      setTimeout(() => {
-        sendMessage(text);
-        document.getElementById('chat-text').value = '';
-        document.getElementById('transcript-indicator').textContent = '';
-      }, 300);
-    } else {
-      document.getElementById('transcript-indicator').textContent = '';
-      // Restart listening if not speaking
-      if (!isSpeakingNow) startRecording();
+    if (!isSpeakingNow && !lastTranscript) {
+      setTimeout(startRecording, 300);
     }
   };
 
   recognition.onerror = (e) => {
-    clearTimeout(silenceTimer);
-    silenceTimer = null;
     isRecording = false;
     if (e.error !== 'no-speech' && e.error !== 'aborted') {
       setStatus('שגיאת מיקרופון: ' + e.error);
     } else if (!isSpeakingNow) {
-      startRecording();
+      setTimeout(startRecording, 300);
     }
   };
 
   recognition.start();
-}
-
-function stopRecording() {
-  if (recognition) recognition.stop();
 }
 
 // =========== UI HELPERS ===========
