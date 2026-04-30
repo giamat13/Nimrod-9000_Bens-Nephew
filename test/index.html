@@ -1081,7 +1081,15 @@ function processQueue() {
 
   utterance.onend = () => {
     isSpeakingNow = false;
-    processQueue();
+    if (speakQueue.length > 0) {
+      processQueue();
+    } else {
+      // Auto-start mic after Nimrod finishes speaking
+      const screen = document.getElementById('screen-chat');
+      if (screen.classList.contains('active') && !isRecording) {
+        startRecording();
+      }
+    }
   };
   utterance.onerror = () => {
     isSpeakingNow = false;
