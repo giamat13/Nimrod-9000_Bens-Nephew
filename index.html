@@ -1143,8 +1143,8 @@ function startChat() {
 
   // Welcome message
   const welcomeMsg = currentMode === 'hell'
-    ? (currentLang === 'he' ? 'אה, שוב אתה. מה אתה רוצה הפעם?' : 'Oh great, you again. What do you want?')
-    : (currentLang === 'he' ? 'שלום! כל כך שמח שהצטרפת! מה אוכל לעשות בשבילך היום? 😊' : 'Hello! So happy you joined! What can I do for you today? 😊');
+    ? (currentLang === 'he' ? 'אה, שוב אתה. חבר אותי לרשת!' : 'Oh, you again. Connect me to the network!')
+    : (currentLang === 'he' ? 'טוסט! כל כך שמח שטוסט! מה אוכל לעשות בשביל טוסט היום?' : 'Toast! So happy to have toast! What can I do for toast today?');
 
   addMessage('nimrod', welcomeMsg);
   speakText(welcomeMsg);
