@@ -642,11 +642,13 @@ async function loadSVG(containerId, filename) {
     const container = document.getElementById(containerId);
     if (container) {
       container.innerHTML = svgText;
-      // Scale SVG to fit container
       const svg = container.querySelector('svg');
       if (svg) {
         svg.style.width = '100%';
         svg.style.height = '100%';
+      }
+      if (containerId === 'svg-container-chat' && isSpeakingNow) {
+        animateMouth(true);
       }
     }
   } catch (e) {
@@ -664,53 +666,97 @@ function loadFaces() {
   }
 }
 
-// =========== MOUTH ANIMATION ===========
-function animateMouth(speaking) {
-  const containers = ['svg-container-1', 'svg-container-mini'];
-  containers.forEach(id => {
-    const container = document.getElementById(id);
-    if (!container) return;
-    
-    // Find all polylines (the waveform/mouth)
-    const polylines = container.querySelectorAll('polyline');
-    polylines.forEach(polyline => {
-      if (speaking) {
-        polyline.classList.add('speaking-mouth');
-      } else {
-        polyline.classList.remove('speaking-mouth');
-      }
-    });
-    
-    // Also animate rects (for heaven mode bars)
-    const rects = container.querySelectorAll('rect');
-    rects.forEach(rect => {
-      // Skip eye elements - only animate waveform bars
-      const y = parseFloat(rect.getAttribute('y'));
-      if (y > 240) { // Waveform bars area
-        if (speaking) {
-          rect.classList.add('speaking-mouth');
-        } else {
-          rect.classList.remove('speaking-mouth');
-        }
-      }
-    });
-  });
+// =========== AUDIO ANALYSER ===========
+let audioContext = null, analyser = null, audioDataArray = null;
+
+async function startAudioAnalyser() {
+  if (analyser) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
+    audioContext = new AudioContext();
+    const source = audioContext.createMediaStreamSource(stream);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 64;
+    audioDataArray = new Uint8Array(analyser.frequencyBinCount);
+    source.connect(analyser);
+  } catch(e) {
+    analyser = null;
+  }
 }
 
-// Add CSS for mouth animation
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes mouthMove {
-    0%, 100% { transform: translateY(0); }
-    25% { transform: translateY(-2px); }
-    50% { transform: translateY(1px); }
-    75% { transform: translateY(-1px); }
+function getVolume() {
+  if (!analyser) return Math.random();
+  analyser.getByteFrequencyData(audioDataArray);
+  return audioDataArray.reduce((a, b) => a + b, 0) / audioDataArray.length / 128;
+}
+
+// =========== MOUTH ANIMATION ===========
+let mouthAnimFrame = null;
+
+function animateMouth(speaking) {
+  const container = document.getElementById('svg-container-chat');
+  if (!container) return;
+
+  if (!speaking) {
+    cancelAnimationFrame(mouthAnimFrame);
+    mouthAnimFrame = null;
+    // Reset hell polylines
+    container.querySelectorAll('polyline').forEach(p => {
+      p.setAttribute('points', p._origPoints || p.getAttribute('points'));
+    });
+    // Reset heaven bars
+    container.querySelectorAll('rect[data-orig-y]').forEach(r => {
+      r.setAttribute('y', r.dataset.origY);
+      r.setAttribute('height', r.dataset.origH);
+    });
+    return;
   }
-  .speaking-mouth {
-    animation: mouthMove 0.15s ease-in-out infinite;
+
+  if (currentMode === 'hell') {
+    const polylines = container.querySelectorAll('polyline');
+    polylines.forEach(p => { if (!p._origPoints) p._origPoints = p.getAttribute('points'); });
+
+    function animateHell() {
+      const vol = getVolume();
+      polylines.forEach(p => {
+        const orig = p._origPoints.trim().split(/\s+/);
+        const newPts = orig.map((pt, i) => {
+          const [x, y] = pt.split(',');
+          if (!x || !y) return pt;
+          const offset = (Math.sin(Date.now() / 80 + i * 0.4) * 18 * vol);
+          return `${x},${parseFloat(y) + offset}`;
+        });
+        p.setAttribute('points', newPts.join(' '));
+      });
+      mouthAnimFrame = requestAnimationFrame(animateHell);
+    }
+    animateHell();
+
+  } else {
+    // Heaven: animate bar heights
+    const bars = Array.from(container.querySelectorAll('rect')).filter(r => parseFloat(r.getAttribute('y')) > 240);
+    bars.forEach(r => {
+      if (!r.dataset.origY) {
+        r.dataset.origY = r.getAttribute('y');
+        r.dataset.origH = r.getAttribute('height');
+      }
+    });
+
+    function animateHeaven() {
+      const vol = getVolume();
+      bars.forEach((r, i) => {
+        const origH = parseFloat(r.dataset.origH);
+        const origY = parseFloat(r.dataset.origY);
+        const scale = 0.4 + Math.abs(Math.sin(Date.now() / 100 + i * 0.5)) * 1.2 * vol;
+        const newH = Math.min(origH * scale, origH * 1.5);
+        r.setAttribute('height', newH);
+        r.setAttribute('y', origY + (origH - newH));
+      });
+      mouthAnimFrame = requestAnimationFrame(animateHeaven);
+    }
+    animateHeaven();
   }
-`;
-document.head.appendChild(style);
+}
 
 // =========== SCREEN 1: API KEY ===========
 function updateProviderUI() {
@@ -788,6 +834,8 @@ function startChat() {
   if (!currentMode) { selectMode('hell'); }
 
   showScreen('chat');
+
+  startAudioAnalyser();
 
   const svgFile = currentMode === 'hell' ? 'גיהינום.svg' : 'גן עדן.svg';
   loadSVG('svg-container-chat', svgFile);
@@ -966,6 +1014,7 @@ function processQueue() {
   if (isSpeakingNow || speakQueue.length === 0) return;
   const text = speakQueue.shift();
   isSpeakingNow = true;
+  animateMouth(true);
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = currentLang === 'he' ? 'he-IL' : 'en-US';
@@ -980,6 +1029,7 @@ function processQueue() {
 
   utterance.onend = () => {
     isSpeakingNow = false;
+    animateMouth(false);
     if (speakQueue.length > 0) {
       processQueue();
     } else {
@@ -989,6 +1039,7 @@ function processQueue() {
   };
   utterance.onerror = () => {
     isSpeakingNow = false;
+    animateMouth(false);
     processQueue();
   };
 
