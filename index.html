@@ -2479,11 +2479,24 @@ function getSupportedMimeType() {
 
 async function transcribeWithWhisper(blob) {
   const formData = new FormData();
-  // Whisper accepts webm/ogg/mp4/m4a/wav
-  const ext = blob.type.includes('mp4') ? 'mp4' : blob.type.includes('ogg') ? 'ogg' : 'webm';
-  formData.append('file', blob, `audio.${ext}`);
-  formData.append('model', 'whisper-1');
+
+  // Determine file extension from actual MIME type
+  const mime = blob.type || 'audio/webm';
+  let ext = 'webm';
+  if (mime.includes('mp4') || mime.includes('m4a')) ext = 'mp4';
+  else if (mime.includes('ogg')) ext = 'ogg';
+  else if (mime.includes('wav')) ext = 'wav';
+  else if (mime.includes('mpeg') || mime.includes('mp3')) ext = 'mp3';
+
+  // Groq supports: mp3, mp4, mpeg, mpga, m4a, wav, webm
+  // OpenAI Whisper supports: flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, webm
+  formData.append('file', blob, `recording.${ext}`);
+
+  // Groq uses whisper-large-v3, OpenAI uses whisper-1
+  const model = apiProvider === 'groq' ? 'whisper-large-v3' : 'whisper-1';
+  formData.append('model', model);
   formData.append('language', currentLang === 'he' ? 'he' : 'en');
+  formData.append('response_format', 'json');
 
   try {
     const endpoint = apiProvider === 'groq'
@@ -2496,7 +2509,13 @@ async function transcribeWithWhisper(blob) {
       body: formData
     });
 
-    if (!res.ok) { setStatus('שגיאת תמלול'); return; }
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      console.error('Whisper error', res.status, errBody);
+      setStatus('שגיאת תמלול (' + res.status + ')');
+      return;
+    }
+
     const data = await res.json();
     const text = (data.text || '').trim();
     document.getElementById('transcript-indicator').textContent = text ? `🎤 ${text}` : '';
@@ -2507,8 +2526,8 @@ async function transcribeWithWhisper(blob) {
       setStatus('לחץ 🎤 לדיבור');
     }
   } catch(e) {
+    console.error('Whisper fetch error:', e);
     setStatus('שגיאת תמלול');
-    console.error(e);
   }
 }
 
@@ -3052,4 +3071,4 @@ function checkToastInText(text) {
 </style>
 
 </body>
-</html>
+</html>ה
