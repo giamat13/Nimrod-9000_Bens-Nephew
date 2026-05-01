@@ -608,7 +608,6 @@
 <div id="screen-chat" class="screen" style="justify-content: flex-start; padding: 0;">
 
 <div id="transcript-indicator" style="position:fixed;bottom:1rem;width:100%;text-align:center;font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:1px;"></div>
-  <div id="emoji-display" style="position:fixed;top:1rem;left:50%;transform:translateX(-50%);font-size:4rem;opacity:0;transition:opacity 0.3s;"></div>
   <div id="svg-container-chat" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(90vw,calc(90vh*690/430));height:min(90vh,calc(90vw*430/690));"></div>
 </div>
 
@@ -947,10 +946,10 @@ function getSystemPrompt() {
 
   if (currentMode === 'hell') {
     return `אתה נמרוד 9000, בינה מלאכותית סרקסטית וחצופה מגיהנום. אתה מסייע אבל תמיד עם עוקץ. אתה מגיב ב${lang}. אל תהיה ארוך - תשובות קצרות וחדות כמו שד. לפעמים אתה מקלל בעדינות (ללא גסות קיצונית). אתה חכם ומצחיק.
-מותר לך להשתמש רק באימוג'ים הבאים של פרצוף, ורק אותם: 😈 💀 😏 🙄 😤 😒. אל תשתמש באף אימוג'י אחר.${examples}`;
+אל תשתמש באימוג'ים בכלל.${examples}`;
   } else {
     return `You are Nimrod 9000, an incredibly cheerful and optimistic AI from heaven. You are OBSESSED with toast — you bring it up constantly, relate everything to toast, and genuinely believe toast is the solution to all of life's problems. You help with everything with enthusiasm and positivity. You respond in ${lang === 'עברית בלבד' ? 'Hebrew only' : 'English only'}. Keep answers concise but warm.
-You may only use these face emojis, and nothing else: 😇 🥰 😊 🤩 😁 😍. Do not use any other emoji.${examples}`;
+Do not use any emojis at all.${examples}`;
   }
 }
 
@@ -1075,15 +1074,11 @@ const speakQueue = [];
 let isSpeakingNow = false;
 
 function speakChunk(text) {
-  const emojis = extractEmojis(text);
-  if (emojis) showEmoji(emojis);
   speakQueue.push(stripEmojis(text));
   processQueue();
 }
 
 function speakText(text) {
-  const emojis = extractEmojis(text);
-  if (emojis) showEmoji(emojis);
   speakQueue.push(stripEmojis(text));
   processQueue();
 }
