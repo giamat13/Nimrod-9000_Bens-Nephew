@@ -2407,7 +2407,12 @@ async function startMediaRecorderSession() {
   }
   isRecording = true;
   setStatus('לחץ 🎤 לדיבור');
-  showMicButton(true);
+  // Always show the button — even if micStream already existed from a previous session
+  const btn = document.getElementById('mic-tap-btn');
+  if (btn) {
+    btn.style.display = 'flex';
+    updateMicButtonUI(false);
+  }
 }
 
 async function tapMicStart() {
@@ -3071,4 +3076,4 @@ function checkToastInText(text) {
 </style>
 
 </body>
-</html>ה
+</html>
