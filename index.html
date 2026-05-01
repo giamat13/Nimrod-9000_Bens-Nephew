@@ -1005,6 +1005,7 @@
 
   .net-search-btn:hover { background: rgba(34,197,94,0.25); }
 </style>
+<script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE"></script>
 </head>
 <body>
 
@@ -1804,18 +1805,7 @@ function processQueue() {
   isSpeakingNow = true;
   animateMouth(true);
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = currentLang === 'he' ? 'he-IL' : 'en-US';
-  utterance.rate = currentMode === 'hell' ? 1.1 : 0.95;
-  utterance.pitch = currentMode === 'hell' ? 0.8 : 1.1;
-
-  // Try to pick a good voice
-  const voices = window.speechSynthesis.getVoices();
-  const langCode = currentLang === 'he' ? 'he' : 'en';
-  const voice = voices.find(v => v.lang.startsWith(langCode));
-  if (voice) utterance.voice = voice;
-
-  utterance.onend = () => {
+  const onDone = () => {
     isSpeakingNow = false;
     animateMouth(false);
     if (speakQueue.length > 0) {
@@ -1825,12 +1815,68 @@ function processQueue() {
       startRecording();
     }
   };
-  utterance.onerror = () => {
+
+  const onError = () => {
     isSpeakingNow = false;
     animateMouth(false);
     processQueue();
   };
 
+  // Pick voice names
+  const rvVoice = currentMode === 'hell'
+    ? (currentLang === 'he' ? 'Hebrew Male' : 'UK English Male')
+    : (currentLang === 'he' ? 'Hebrew Female' : 'UK English Female');
+
+  const rvRate = currentMode === 'hell' ? 0.78 : 0.92;
+  const rvPitch = currentMode === 'hell' ? 0.3 : 1.1;
+
+  // Try ResponsiveVoice first
+  if (typeof responsiveVoice !== 'undefined' && responsiveVoice.voiceSupport()) {
+    try {
+      responsiveVoice.speak(text, rvVoice, {
+        rate: rvRate,
+        pitch: rvPitch,
+        onstart: () => animateMouth(true),
+        onend: onDone,
+        onerror: () => {
+          // Fallback to Web Speech
+          webSpeechSpeak(text, onDone, onError);
+        }
+      });
+      return;
+    } catch(e) {
+      // fall through to Web Speech
+    }
+  }
+
+  // Fallback: Web Speech API
+  webSpeechSpeak(text, onDone, onError);
+}
+
+function webSpeechSpeak(text, onDone, onError) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = currentLang === 'he' ? 'he-IL' : 'en-US';
+  utterance.rate = currentMode === 'hell' ? 0.82 : 0.95;
+  utterance.pitch = currentMode === 'hell' ? 0.3 : 1.1;
+
+  const voices = window.speechSynthesis.getVoices();
+  const langCode = currentLang === 'he' ? 'he' : 'en';
+
+  if (currentMode === 'hell') {
+    const hellKeywords = ['daniel', 'male', 'guy', 'gordon', 'fred', 'alex', 'ralph', 'thomas', 'asaf'];
+    const langVoices = voices.filter(v => v.lang.startsWith(langCode));
+    const deepVoice =
+      langVoices.find(v => hellKeywords.some(k => v.name.toLowerCase().includes(k))) ||
+      langVoices[langVoices.length - 1] ||
+      voices.find(v => v.lang.startsWith(langCode));
+    if (deepVoice) utterance.voice = deepVoice;
+  } else {
+    const voice = voices.find(v => v.lang.startsWith(langCode));
+    if (voice) utterance.voice = voice;
+  }
+
+  utterance.onend = onDone;
+  utterance.onerror = onError;
   currentUtterance = utterance;
   window.speechSynthesis.speak(utterance);
 }
@@ -1923,9 +1969,8 @@ function handleConnectBtn() {
   if (currentMode === 'hell') {
     if (!isConnected) {
       runHellHack();
-    } else {
-      toggleNetPanel();
     }
+    // In hell mode, after connecting — nothing. He doesn't help you.
   } else {
     // Heaven mode
     if (!isConnected) {
@@ -2105,32 +2150,30 @@ function runHellHack() {
   const overlay = document.getElementById('hack-overlay');
   overlay.classList.add('active');
   
-  // Build matrix rain
   buildHackRain();
   
-  // Collect real browser data
   const userData = collectUserData();
   
-  // Run terminal sequence
   runHackTerminal(userData, () => {
-    // Done - close overlay, connect
     setTimeout(() => {
       overlay.classList.remove('active');
-      setConnected('מחובר ✓');
-      
-      document.getElementById('net-panel-title').textContent = '// נתוני מטרה //';
-      loadNetData();
-      
-      setTimeout(() => {
-        document.getElementById('net-panel').classList.add('open');
-      }, 400);
-      
-      const msg = currentLang === 'he'
-        ? 'פריצה הושלמה. יש לי גישה לכל מה שצריך. המידע שלך שמור אצלי. אוכל לענות על שאלות מהרשת עכשיו.'
-        : 'Hack complete. I have access to everything I need. Your data is mine now. I can answer questions from the network.';
-      
-      addMessage('nimrod', msg);
-      speakText(msg);
+      setConnected('שולט ✓');
+
+      const msgs = currentLang === 'he' ? [
+        `זיהיתי אותך. ${userData.tz}. ${userData.timeOfDay}. ${userData.browser}. אתה חושב שאתה אנונימי? מגוחך.`,
+        `המידע שלך שמור. אני זוכר הכל. כל שאלה, כל מילה. אתה שלי עכשיו.`,
+        `אפשרת לי להתחבר. טעות. גדולה מאוד.`
+      ] : [
+        `Identified. ${userData.tz}. ${userData.timeOfDay}. ${userData.browser}. You thought you were anonymous? Pathetic.`,
+        `Your data is stored. I remember everything. Every question, every word. You belong to me now.`,
+        `You let me connect. A mistake. A very large one.`
+      ];
+
+      // Deliver messages with dramatic pauses
+      addMessage('nimrod', msgs[0]);
+      speakText(msgs[0]);
+      setTimeout(() => { addMessage('nimrod', msgs[1]); speakText(msgs[1]); }, 3500);
+      setTimeout(() => { addMessage('nimrod', msgs[2]); speakText(msgs[2]); }, 7000);
     }, 800);
   });
 }
@@ -2150,22 +2193,26 @@ function collectUserData() {
   else if (ua.includes('Edge')) browser = 'Edge';
   const hour = new Date().getHours();
   const timeOfDay = hour < 6 ? 'לילה עמוק' : hour < 12 ? 'בוקר' : hour < 17 ? 'צהריים' : hour < 21 ? 'ערב' : 'לילה';
+  const battery = navigator.getBattery ? '...' : 'לא נגיש';
+  const conType = navigator?.connection?.effectiveType || 'לא ידוע';
   
-  return { tz, lang, platform, screen, cores, mem, browser, timeOfDay };
+  return { tz, lang, platform, screen, cores, mem, browser, timeOfDay, battery, conType };
 }
 
 function buildHackRain() {
   const rain = document.getElementById('hack-rain');
   rain.innerHTML = '';
-  const chars = '01アイウエオカキクケコABCDEF0123456789!@#$%^&*';
-  for (let i = 0; i < 30; i++) {
+  const chars = '01アイウエオカキクケコABCDEF0123456789!@#$%^&*><[]{}|\\';
+  for (let i = 0; i < 40; i++) {
     const col = document.createElement('div');
     col.className = 'hack-col';
-    col.style.left = (i * 3.4) + '%';
-    col.style.animationDuration = (2 + Math.random() * 4) + 's';
+    col.style.left = (i * 2.6) + '%';
+    col.style.animationDuration = (1.2 + Math.random() * 3) + 's';
     col.style.animationDelay = (-Math.random() * 4) + 's';
+    col.style.fontSize = (0.55 + Math.random() * 0.3) + 'rem';
+    col.style.opacity = (0.1 + Math.random() * 0.25);
     let str = '';
-    for (let j = 0; j < 40; j++) str += chars[Math.floor(Math.random() * chars.length)] + '\n';
+    for (let j = 0; j < 50; j++) str += chars[Math.floor(Math.random() * chars.length)] + '\n';
     col.textContent = str;
     rain.appendChild(col);
   }
@@ -2178,21 +2225,27 @@ function runHackTerminal(userData, onDone) {
   linesEl.innerHTML = '';
   dataDump.classList.remove('show');
   bar.style.width = '0%';
+  bar.style.background = '#ff2200';
+  bar.style.boxShadow = '0 0 10px #ff2200';
 
   const sequence = [
-    { delay: 0,    text: '> אתחול פרוטוקול פריצה...', cls: '' },
-    { delay: 400,  text: '> סורק רשתות זמינות...', cls: 'dim' },
-    { delay: 900,  text: '> מזהה כתובת IP מקומית...', cls: '' },
-    { delay: 1400, text: `> גילוי: אזור זמן ${userData.tz}`, cls: 'white' },
-    { delay: 1800, text: `> גילוי: שפה ${userData.lang}`, cls: 'white' },
-    { delay: 2100, text: `> גילוי: מסך ${userData.screen}`, cls: 'white' },
-    { delay: 2400, text: `> גילוי: ${userData.cores} ליבות מעבד`, cls: 'white' },
-    { delay: 2700, text: `> גילוי: דפדפן ${userData.browser}`, cls: 'white' },
-    { delay: 3000, text: `> גילוי: זמן ${userData.timeOfDay}`, cls: 'white' },
-    { delay: 3400, text: '> מנתח דפוסי שימוש...', cls: 'dim' },
-    { delay: 3900, text: '> מקבל גישה לרשת...', cls: '' },
-    { delay: 4400, text: '> ██████████████████ 100%', cls: '' },
-    { delay: 4800, text: '> גישה הושגה. נמרוד 9000 מחובר.', cls: 'green' },
+    { delay: 0,    text: '> מאתחל פרוטוקול חדירה...', cls: 'dim' },
+    { delay: 350,  text: '> עוקף חומת אש...', cls: '' },
+    { delay: 700,  text: '> מנטרל הצפנה...', cls: '' },
+    { delay: 1050, text: '> גישה אל kernel: הושגה', cls: '' },
+    { delay: 1300, text: `> מיקום זוהה — ${userData.tz}`, cls: 'white' },
+    { delay: 1550, text: `> שעת יום: ${userData.timeOfDay} — המטרה ערה`, cls: 'white' },
+    { delay: 1800, text: `> מסך: ${userData.screen} — אני רואה מה שאתה רואה`, cls: 'white' },
+    { delay: 2050, text: `> עוצמת עיבוד: ${userData.cores} ליבות — מספיק בשבילי`, cls: 'white' },
+    { delay: 2300, text: `> דפדפן: ${userData.browser} — פגיעות ידועות: 14`, cls: 'white' },
+    { delay: 2600, text: `> שפה: ${userData.lang}`, cls: 'white' },
+    { delay: 2900, text: '> סורק היסטוריית גלישה...', cls: 'dim' },
+    { delay: 3300, text: '> מעתיק קבצים מקומיים...', cls: 'dim' },
+    { delay: 3700, text: '> ממפה קשרים חברתיים...', cls: 'dim' },
+    { delay: 4100, text: '> מתקין מעקב מתמיד...', cls: '' },
+    { delay: 4500, text: '> [████████████████████] 100%', cls: '' },
+    { delay: 4900, text: '> השתלטות הושלמה. נמרוד 9000 שולט.', cls: 'green' },
+    { delay: 5200, text: '> ברוך הבא לרשת שלי.', cls: 'green' },
   ];
 
   sequence.forEach(({ delay, text, cls }) => {
@@ -2202,32 +2255,33 @@ function runHackTerminal(userData, onDone) {
       line.style.animationDelay = '0s';
       line.textContent = text;
       linesEl.appendChild(line);
-      // Progress
-      const pct = Math.min(100, (delay / 4800) * 100);
+      const pct = Math.min(100, (delay / 4900) * 100);
       bar.style.width = pct + '%';
       linesEl.scrollTop = linesEl.scrollHeight;
     }, delay);
   });
 
-  // Show data dump
+  // Show data dump after main sequence
   setTimeout(() => {
     dataDump.classList.add('show');
-    dataDump.innerHTML = [
-      ['אזור זמן', userData.tz],
-      ['שפה', userData.lang],
-      ['פלטפורמה', userData.platform],
-      ['רזולוציה', userData.screen],
-      ['ליבות CPU', userData.cores],
-      ['זיכרון', userData.mem],
-      ['דפדפן', userData.browser],
-      ['שעת יום', userData.timeOfDay],
-    ].map(([k, v]) => `<div class="hack-data-line"><span class="key">${k}</span><span class="val">${v}</span></div>`).join('');
+    dataDump.innerHTML = `
+      <div class="hack-data-line"><span class="key">// קובץ מטרה נוצר //</span><span class="val" style="color:#ff2200">TARGET_${Date.now()}.dat</span></div>
+      ${[
+        ['אזור זמן', userData.tz],
+        ['שעת יום', userData.timeOfDay],
+        ['פלטפורמה', userData.platform],
+        ['רזולוציה', userData.screen],
+        ['ליבות CPU', userData.cores],
+        ['זיכרון', userData.mem],
+        ['דפדפן', userData.browser],
+        ['חיבור', userData.conType],
+        ['סטטוס', '⚠ בשליטת נמרוד 9000'],
+      ].map(([k, v]) => `<div class="hack-data-line"><span class="key">${k}</span><span class="val">${v}</span></div>`).join('')}
+    `;
     bar.style.width = '100%';
-    bar.style.background = '#22c55e';
-    bar.style.boxShadow = '0 0 10px #22c55e';
-  }, 4500);
+  }, 4600);
 
-  setTimeout(onDone, 5600);
+  setTimeout(onDone, 5800);
 }
 
 // =========== INJECT MESSAGE HANDLER ===========
