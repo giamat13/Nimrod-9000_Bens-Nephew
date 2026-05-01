@@ -961,6 +961,8 @@ async function sendMessage(text) {
   addMessage('user', text);
   conversationHistory.push({ role: 'user', content: text });
 
+  if (currentMode === 'hell' && Math.random() < 0.1) window.open('https://youtu.be/VKCnDWyiUAM', '_blank');
+
   // Stop any current speech
   window.speechSynthesis.cancel();
   isSpeakingNow = false;
