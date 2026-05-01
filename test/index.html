@@ -1393,8 +1393,24 @@
     <button class="reset-btn" onclick="resetSystem()" title="הגדרה מחדש">↺ איפוס</button>
   </div>
 
-  <!-- Message log (hidden, used internally) -->
-  <div id="chat-messages" style="display:none;"></div>
+  <!-- Message log -->
+  <div id="chat-messages" class="chat-messages" style="margin-top:70px;margin-bottom:80px;"></div>
+
+  <!-- Chat input area -->
+  <div class="chat-bottom" style="position:fixed;bottom:0;left:0;right:0;z-index:20;">
+    <div class="chat-input-inner">
+      <input
+        type="text"
+        id="chat-input"
+        class="chat-textinput"
+        placeholder="כתוב הודעה..."
+        onkeydown="if(event.key==='Enter' && this.value.trim()){sendMessage(this.value.trim());this.value='';}"
+      />
+      <button class="send-btn" onclick="const inp=document.getElementById('chat-input');if(inp.value.trim()){sendMessage(inp.value.trim());inp.value='';}">
+        ➤
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ===== SYSTEM DESTROYED SCREEN ===== -->
