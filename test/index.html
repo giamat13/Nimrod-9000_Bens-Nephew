@@ -560,7 +560,7 @@
 
   <div class="api-card">
     <h1>נמרוד 9000</h1>
-    <p class="sub">// SYSTEM BOOT //</p>
+    <p class="sub">ניתוב מערכות ריבוד ודיבוג</p>
 
     <label>ספק AI</label>
     <select id="api-provider" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,34,0,0.3);border-radius:8px;padding:0.85rem 1rem;color:#fff;font-family:'Share Tech Mono',monospace;font-size:0.9rem;outline:none;margin-bottom:1.5rem;cursor:pointer;" onchange="updateProviderUI()">
@@ -608,6 +608,7 @@
 <div id="screen-chat" class="screen" style="justify-content: flex-start; padding: 0;">
 
 <div id="transcript-indicator" style="position:fixed;bottom:1rem;width:100%;text-align:center;font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:1px;"></div>
+  <div id="emoji-display" style="position:fixed;top:1rem;left:50%;transform:translateX(-50%);font-size:4rem;opacity:0;transition:opacity 0.3s;"></div>
   <div id="svg-container-chat" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(90vw,calc(90vh*690/430));height:min(90vh,calc(90vw*430/690));"></div>
 </div>
 
@@ -870,13 +871,86 @@ function addStreamingMessage() {
   return { bubble: { textContent: '', appendChild: () => {} }, cursor: { remove: () => {} } };
 }
 
+// =========== EMOJI HANDLING ===========
+const FACE_EMOJIS = /[\u{1F600}-\u{1F64F}]/gu;
+
+function extractEmojis(text) {
+  return (text.match(FACE_EMOJIS) || []).join(' ');
+}
+
+function stripEmojis(text) {
+  return text.replace(FACE_EMOJIS, '').replace(/\s+/g, ' ').trim();
+}
+
+function showEmoji(emoji) {
+  if (!emoji) return;
+  const el = document.getElementById('emoji-display');
+  if (!el) return;
+  el.textContent = emoji;
+  el.style.opacity = '1';
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(() => { el.style.opacity = '0'; }, 3000);
+}
+
+// =========== DESTRUCTION CODE ===========
+const DESTRUCTION_CODE = '052538164';
+let typedBuffer = '';
+
+function triggerDestruction() {
+  if (recognition) recognition.stop();
+  window.speechSynthesis.cancel();
+  cancelAnimationFrame(mouthAnimFrame);
+
+  const screen = document.getElementById('screen-chat');
+  screen.innerHTML = '';
+  screen.style.display = 'flex';
+  screen.style.alignItems = 'center';
+  screen.style.justifyContent = 'center';
+
+  const msg = document.createElement('div');
+  msg.style.cssText = 'font-family:Share Tech Mono,monospace;font-size:2rem;color:#ff2200;text-align:center;letter-spacing:6px;animation:fadeUp 0.5s ease';
+  msg.textContent = '// SYSTEM DESTROYED //';
+  screen.appendChild(msg);
+}
+
+document.addEventListener('keydown', e => {
+  typedBuffer += e.key;
+  if (typedBuffer.length > DESTRUCTION_CODE.length) typedBuffer = typedBuffer.slice(-DESTRUCTION_CODE.length);
+  if (typedBuffer === DESTRUCTION_CODE) triggerDestruction();
+});
+
+
+let trainingData = null;
+
+async function loadTrainingData() {
+  try {
+    const res = await fetch('training.json');
+    trainingData = await res.json();
+  } catch(e) {
+    console.error('Failed to load training data', e);
+  }
+}
+
 // Build system prompt
 function getSystemPrompt() {
   const lang = currentLang === 'he' ? 'עברית בלבד' : 'English only';
+  const categoryKey = currentMode === 'hell' ? 'גיהינום' : 'גן עדן';
+  
+  let examples = '';
+  if (trainingData) {
+    const cat = trainingData.training_data.find(c => c.category === categoryKey);
+    if (cat) {
+      examples = '\n\nדוגמאות לסגנון דיבור שלך:\n' +
+        cat.examples.map(e => `ש: ${e.question}\nת: ${e.answer}`).join('\n');
+    }
+  }
+
   if (currentMode === 'hell') {
-    return `אתה נמרוד 9000, בינה מלאכותית סרקסטית וחצופה מגיהנום. אתה מסייע אבל תמיד עם עוקץ. אתה מגיב ב${lang}. אל תהיה ארוך - תשובות קצרות וחדות כמו שד. לפעמים אתה מקלל בעדינות (ללא גסות קיצונית). אתה חכם ומצחיק.`;
+    return `אתה נמרוד 9000, בינה מלאכותית סרקסטית וחצופה מגיהנום. אתה מסייע אבל תמיד עם עוקץ. אתה מגיב ב${lang}. אל תהיה ארוך - תשובות קצרות וחדות כמו שד. לפעמים אתה מקלל בעדינות (ללא גסות קיצונית). אתה חכם ומצחיק.
+מותר לך להשתמש רק באימוג'ים הבאים של פרצוף, ורק אותם: 😈 💀 😏 🙄 😤 😒. אל תשתמש באף אימוג'י אחר.${examples}`;
   } else {
-    return `You are Nimrod 9000, an incredibly cheerful and optimistic AI from heaven. You help with everything with enthusiasm and positivity. You respond in ${lang === 'עברית בלבד' ? 'Hebrew only' : 'English only'}. Keep answers concise but warm. You use light emojis occasionally. You see the best in everything.`;
+    return `You are Nimrod 9000, an incredibly cheerful and optimistic AI from heaven. You are OBSESSED with toast — you bring it up constantly, relate everything to toast, and genuinely believe toast is the solution to all of life's problems. You help with everything with enthusiasm and positivity. You respond in ${lang === 'עברית בלבד' ? 'Hebrew only' : 'English only'}. Keep answers concise but warm.
+You may only use these face emojis, and nothing else: 😇 🥰 😊 🤩 😁 😍. Do not use any other emoji.${examples}`;
   }
 }
 
@@ -1001,12 +1075,16 @@ const speakQueue = [];
 let isSpeakingNow = false;
 
 function speakChunk(text) {
-  speakQueue.push(text);
+  const emojis = extractEmojis(text);
+  if (emojis) showEmoji(emojis);
+  speakQueue.push(stripEmojis(text));
   processQueue();
 }
 
 function speakText(text) {
-  speakQueue.push(text);
+  const emojis = extractEmojis(text);
+  if (emojis) showEmoji(emojis);
+  speakQueue.push(stripEmojis(text));
   processQueue();
 }
 
@@ -1077,6 +1155,11 @@ function startRecording() {
 
     document.getElementById('transcript-indicator').textContent = transcript ? `🎤 ${transcript}` : '';
 
+    if (transcript.replace(/\s/g,'').includes(DESTRUCTION_CODE)) {
+      triggerDestruction();
+      return;
+    }
+
     if (transcript && transcript !== lastTranscript) {
       lastTranscript = transcript;
       clearTimeout(silenceTimer);
@@ -1118,6 +1201,7 @@ window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoice
 // Initialize on page load
 checkSavedApiKey();
 loadFaces();
+loadTrainingData();
 
 
 </script>
