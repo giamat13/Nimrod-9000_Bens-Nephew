@@ -1393,8 +1393,24 @@
     <button class="reset-btn" onclick="resetSystem()" title="הגדרה מחדש">↺ איפוס</button>
   </div>
 
-  <!-- Message log (hidden, used internally) -->
-  <div id="chat-messages" style="display:none;"></div>
+  <!-- Message log (hidden visually, active in background) -->
+  <div id="chat-messages" class="chat-messages" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;"></div>
+
+  <!-- Chat input area (hidden) -->
+  <div class="chat-bottom" style="display:none;">
+    <div class="chat-input-inner">
+      <input
+        type="text"
+        id="chat-input"
+        class="chat-textinput"
+        placeholder="כתוב הודעה..."
+        onkeydown="if(event.key==='Enter' && this.value.trim()){sendMessage(this.value.trim());this.value='';}"
+      />
+      <button class="send-btn" onclick="const inp=document.getElementById('chat-input');if(inp.value.trim()){sendMessage(inp.value.trim());inp.value='';}">
+        ➤
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ===== SYSTEM DESTROYED SCREEN ===== -->
@@ -2407,7 +2423,12 @@ async function startMediaRecorderSession() {
   }
   isRecording = true;
   setStatus('לחץ 🎤 לדיבור');
-  showMicButton(true);
+  // Always show the button — even if micStream already existed from a previous session
+  const btn = document.getElementById('mic-tap-btn');
+  if (btn) {
+    btn.style.display = 'flex';
+    updateMicButtonUI(false);
+  }
 }
 
 async function tapMicStart() {
@@ -2633,6 +2654,9 @@ function restoreState() {
 
     // Restore chat messages
     (s.msgs || []).forEach(m => addMessage(m.role, m.text));
+
+    // Start mic after restoring state (was not triggered since no welcome message is spoken)
+    setTimeout(() => startRecording(), 500);
 
     return true;
   } catch(e) { return false; }
@@ -3071,4 +3095,4 @@ function checkToastInText(text) {
 </style>
 
 </body>
-</html>ה
+</html>
