@@ -1806,6 +1806,7 @@ function startChat() {
 
   addMessage('nimrod', welcomeMsg);
   speakText(welcomeMsg);
+  saveState();
 }
 
 // =========== FACE UPDATES (fallback) ===========
@@ -1926,6 +1927,7 @@ function resetSystem() {
   isRecording = false;
   hasSeenHellGlitch = false;
   typedBuffer = '';
+  localStorage.removeItem('nimrod_state');
 
   // Reset body class
   document.body.classList.remove('heaven');
@@ -1947,7 +1949,13 @@ function resetSystem() {
   document.getElementById('chat-header').style.display = 'none';
 
   const connectBtn = document.getElementById('connect-btn');
-  if (connectBtn) { connectBtn.classList.remove('connected'); connectBtn.style.display = 'none'; }
+  if (connectBtn) {
+    connectBtn.classList.remove('connected');
+    connectBtn.style.display = 'none';
+    connectBtn.disabled = false;
+    connectBtn.style.opacity = '';
+    connectBtn.style.cursor = '';
+  }
   const connectLabel = document.getElementById('connect-btn-label');
   if (connectLabel) connectLabel.textContent = 'חיבור לרשת';
 
@@ -2155,6 +2163,7 @@ setStatus('מדבר...');
 
 cursor.remove();
     conversationHistory.push({ role: 'assistant', content: fullText });
+    saveState();
     setStatus('מוכן לפקודות');
     setWaveform(false);
     animateMouth(false);
@@ -2341,6 +2350,83 @@ checkSavedApiKey();
 loadFaces();
 loadTrainingData();
 
+// =========== PERSISTENCE (localStorage) ===========
+function saveState() {
+  try {
+    const msgs = [];
+    document.querySelectorAll('#chat-messages .message').forEach(div => {
+      const role = div.classList.contains('nimrod') ? 'nimrod' : 'user';
+      const bubble = div.querySelector('.msg-bubble');
+      if (bubble) msgs.push({ role, text: bubble.textContent });
+    });
+    localStorage.setItem('nimrod_state', JSON.stringify({
+      apiKey, apiProvider, currentMode, currentLang, currentTimezone,
+      isConnected, conversationHistory, msgs
+    }));
+  } catch(e) {}
+}
+
+function restoreState() {
+  try {
+    const raw = localStorage.getItem('nimrod_state');
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (!s.apiKey) return false;
+
+    apiKey = s.apiKey;
+    apiProvider = s.apiProvider || 'openai';
+    currentMode = s.currentMode || 'hell';
+    currentLang = s.currentLang || 'he';
+    currentTimezone = s.currentTimezone || '';
+    isConnected = s.isConnected || false;
+    conversationHistory = s.conversationHistory || [];
+
+    // Restore UI mode
+    if (currentMode === 'heaven') document.body.classList.add('heaven');
+    else document.body.classList.remove('heaven');
+
+    // Go straight to chat screen
+    showScreen('chat');
+    const header = document.getElementById('chat-header');
+    header.style.display = 'flex';
+    header.style.borderBottomColor = currentMode === 'hell' ? 'rgba(255,34,0,0.15)' : 'rgba(34,197,94,0.15)';
+    document.getElementById('mobile-destroy-btn').style.display = '';
+
+    const svgFile = currentMode === 'hell' ? 'גיהינום.svg' : 'גן עדן.svg';
+    loadSVG('svg-container-mini', svgFile);
+    loadSVG('svg-container-chat', svgFile);
+    startAudioAnalyser();
+
+    // Show connect button
+    const connectBtn = document.getElementById('connect-btn');
+    if (connectBtn) connectBtn.style.display = '';
+
+    // Restore connected state
+    if (isConnected) {
+      const label = currentMode === 'hell' ? 'שולט ✓' : 'מחובר לרשת';
+      const btn = document.getElementById('connect-btn');
+      const lbl = document.getElementById('connect-btn-label');
+      if (btn) btn.classList.add('connected');
+      if (lbl) lbl.textContent = label;
+    }
+
+    // Restore chat messages
+    (s.msgs || []).forEach(m => addMessage(m.role, m.text));
+
+    return true;
+  } catch(e) { return false; }
+}
+
+// Auto-save on every message add (patch after restore)
+const _origAddMessagePersist = window.addMessage;
+window.addMessage = function(role, text) {
+  _origAddMessagePersist(role, text);
+  setTimeout(saveState, 100);
+};
+
+// Try restore on load
+restoreState();
+
 // =========== CONNECT BUTTON LOGIC ===========
 let isConnected = false;
 let netDataLoaded = false;
@@ -2352,26 +2438,60 @@ function handleConnectBtn() {
     if (!isConnected) {
       runHellHack();
     }
-    // In hell mode, after connecting — nothing. He doesn't help you.
+    // בגיהינום אי אפשר לנתק — נמרוד לא מרפה
   } else {
-    // Heaven mode
+    // גן עדן
     if (!isConnected) {
       connectHeaven();
     } else {
-      toggleNetPanel();
+      disconnectHeaven();
     }
   }
 }
 
-function setConnected(label) {
-  isConnected = true;
-  // Update status indicator in header
-  const statusEl = document.getElementById('status-text');
-  if (statusEl) statusEl.textContent = label || 'מחובר';
-  // Update connect button
+function disconnectHeaven() {
+  isConnected = false;
+  netDataLoaded = false;
+  weatherData = null;
+  btcData = null;
+
+  // סגור פאנל אם פתוח
+  document.getElementById('net-panel').classList.remove('open');
+  document.getElementById('wiki-search-section').style.display = 'none';
+  document.getElementById('net-panel-title').textContent = '// גישה לרשת //';
+
+  // עדכן כפתור
   const btn = document.getElementById('connect-btn');
   const btnLabel = document.getElementById('connect-btn-label');
-  if (btn) btn.classList.add('connected');
+  if (btn) btn.classList.remove('connected');
+  if (btnLabel) btnLabel.textContent = 'חיבור לרשת';
+
+  // עדכן סטטוס
+  const statusEl = document.getElementById('status-text');
+  if (statusEl) statusEl.textContent = 'מוכן לפקודות';
+
+  // הודעת ניתוק
+  const msg = currentLang === 'he'
+    ? 'ניתקת אותי מהרשת! אבל הטוסט עדיין כאן איתנו! 🍞'
+    : 'You disconnected me from the internet! But toast is still here with us! 🍞';
+  addMessage('nimrod', msg);
+  speakText(msg);
+}
+
+function setConnected(label) {
+  isConnected = true;
+  const statusEl = document.getElementById('status-text');
+  if (statusEl) statusEl.textContent = label || 'מחובר';
+  const btn = document.getElementById('connect-btn');
+  const btnLabel = document.getElementById('connect-btn-label');
+  if (btn) {
+    btn.classList.add('connected');
+    if (currentMode === 'hell') {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      btn.style.cursor = 'not-allowed';
+    }
+  }
   if (btnLabel) btnLabel.textContent = label || 'מחובר';
 }
 
