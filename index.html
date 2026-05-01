@@ -2057,6 +2057,7 @@ async function sendMessage(text) {
   let fullText = '';
   let spokenSoFar = '';
   let speakBuffer = '';
+  lastToastCount = 0;
 
   try {
     const isGroq = apiProvider === 'groq';
@@ -2113,8 +2114,10 @@ setStatus('מדבר...');
           const delta = parsed.choices?.[0]?.delta?.content;
           if (!delta) continue;
 
+          const _prevToastCount = countToastOccurrences(fullText);
           fullText += delta;
           speakBuffer += delta;
+          if (countToastOccurrences(fullText) > _prevToastCount) flashToast();
 
           // Update bubble text
           bubble.textContent = fullText;
@@ -2653,6 +2656,74 @@ function runHackTerminal(userData, onDone) {
 
 
 
+
+// =========== TOAST FLASH ===========
+let toastFlashTimeout = null;
+let lastToastCount = 0;
+
+function flashToast() {
+  const overlay = document.getElementById('toast-flash-overlay');
+  if (!overlay) return;
+  overlay.classList.add('visible');
+  clearTimeout(toastFlashTimeout);
+  toastFlashTimeout = setTimeout(() => {
+    overlay.classList.remove('visible');
+  }, 1000);
+}
+
+function countToastOccurrences(text) {
+  return (text.match(/טוסט/g) || []).length;
+}
+
+function checkToastInText(text) {
+  const count = countToastOccurrences(text);
+  if (count > lastToastCount) {
+    flashToast();
+  }
+  lastToastCount = count;
+}
+
+// Patch addMessage to detect toast in nimrod messages
+const _origAddMessage = addMessage;
+window.addMessage = function(role, text) {
+  _origAddMessage(role, text);
+  if (role === 'nimrod' && /טוסט/.test(text)) {
+    flashToast();
+  }
+};
+
 </script>
+
+<!-- Toast Flash Overlay -->
+<div id="toast-flash-overlay" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  pointer-events:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.0);
+">
+  <img src="toast.png" style="
+    max-width:min(60vw,400px);
+    max-height:min(60vh,400px);
+    object-fit:contain;
+    filter: drop-shadow(0 0 40px rgba(255,180,0,0.8));
+    animation: toastPop 0.15s ease-out;
+  " alt="טוסט" />
+</div>
+
+<style>
+#toast-flash-overlay { display: none; }
+#toast-flash-overlay.visible {
+  display: flex !important;
+}
+@keyframes toastPop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+</style>
+
 </body>
 </html>
