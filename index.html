@@ -1347,6 +1347,30 @@
 <div id="screen-chat" class="screen" style="justify-content: flex-start; padding: 0;">
 
 <div id="transcript-indicator" style="position:fixed;bottom:1rem;width:100%;text-align:center;font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:1px;"></div>
+
+<!-- Tap-to-speak mic button (shown on iOS and MediaRecorder fallback) -->
+<button id="mic-tap-btn" onclick="tapMicToggle()" style="
+  display:none;
+  position:fixed;
+  bottom:4.5rem;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:60;
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  border:1.5px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.06);
+  color:#fff;
+  font-size:1.5rem;
+  cursor:pointer;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter:blur(10px);
+  transition:all 0.2s;
+  flex-direction:column;
+  gap:2px;
+">🎤</button>
   <div id="svg-container-chat" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(90vw,calc(90vh*690/430));height:min(90vh,calc(90vw*430/690));"></div>
 
   <!-- Chat header with reset button -->
@@ -2203,7 +2227,13 @@ function processQueue() {
       processQueue();
     } else {
       lastTranscript = '';
-      startRecording();
+      if (isIOS() || (!hasNativeSpeechRecognition())) {
+        // Tap-button mode: just indicate ready
+        setStatus('לחץ 🎤 לדיבור');
+        showMicButton(true);
+      } else {
+        startRecording();
+      }
     }
   };
 
@@ -2275,12 +2305,19 @@ function webSpeechSpeak(text, onDone, onError) {
 // =========== MIC / SPEECH RECOGNITION ===========
 let lastTranscript = '';
 
-function startRecording() {
+// Detect if Web Speech API works (desktop Chrome / some Android Chrome)
+function hasNativeSpeechRecognition() {
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+}
+
+// Detect iOS (Safari or Chrome-on-iOS, both use WebKit)
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+// ---- Native Web Speech (desktop Chrome / Android Chrome) ----
+function startNativeRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    alert('הדפדפן לא תומך בזיהוי קול. נסה Chrome.');
-    return;
-  }
   if (isRecording) return;
 
   recognition = new SpeechRecognition();
@@ -2291,6 +2328,7 @@ function startRecording() {
   recognition.onstart = () => {
     isRecording = true;
     setStatus('מאזין...');
+    showMicButton(true);
   };
 
   recognition.onresult = (event) => {
@@ -2325,7 +2363,7 @@ function startRecording() {
   recognition.onend = () => {
     isRecording = false;
     if (!isSpeakingNow && !lastTranscript) {
-      setTimeout(startRecording, 300);
+      setTimeout(startNativeRecognition, 300);
     }
   };
 
@@ -2334,11 +2372,162 @@ function startRecording() {
     if (e.error !== 'no-speech' && e.error !== 'aborted') {
       setStatus('שגיאת מיקרופון: ' + e.error);
     } else if (!isSpeakingNow) {
-      setTimeout(startRecording, 300);
+      setTimeout(startNativeRecognition, 300);
     }
   };
 
   recognition.start();
+}
+
+// ---- MediaRecorder fallback (iOS + others without native SR) ----
+let mediaRecorder = null;
+let mediaChunks = [];
+let micStream = null;
+let isMicButtonRecording = false;
+
+function showMicButton(listening) {
+  const btn = document.getElementById('mic-tap-btn');
+  if (!btn) return;
+  btn.style.display = 'flex';
+  if (listening) {
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+  }
+}
+
+async function startMediaRecorderSession() {
+  // Request mic once, keep stream alive
+  if (!micStream) {
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch(e) {
+      setStatus('אין הרשאת מיקרופון');
+      return;
+    }
+  }
+  isRecording = true;
+  setStatus('לחץ 🎤 לדיבור');
+  showMicButton(true);
+}
+
+async function tapMicStart() {
+  if (isMicButtonRecording) return;
+  if (isSpeakingNow) return;
+
+  if (!micStream) {
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch(e) {
+      setStatus('אין הרשאת מיקרופון');
+      return;
+    }
+  }
+
+  mediaChunks = [];
+  try {
+    mediaRecorder = new MediaRecorder(micStream, { mimeType: getSupportedMimeType() });
+  } catch(e) {
+    mediaRecorder = new MediaRecorder(micStream);
+  }
+
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) mediaChunks.push(e.data); };
+  mediaRecorder.onstop = async () => {
+    isMicButtonRecording = false;
+    updateMicButtonUI(false);
+    setStatus('מעבד...');
+    const blob = new Blob(mediaChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+    await transcribeWithWhisper(blob);
+  };
+
+  mediaRecorder.start();
+  isMicButtonRecording = true;
+  updateMicButtonUI(true);
+  setStatus('🔴 מקליט — לחץ שוב לסיום');
+}
+
+function tapMicStop() {
+  if (!isMicButtonRecording || !mediaRecorder) return;
+  mediaRecorder.stop();
+}
+
+function tapMicToggle() {
+  if (isMicButtonRecording) tapMicStop();
+  else tapMicStart();
+}
+
+function updateMicButtonUI(recording) {
+  const btn = document.getElementById('mic-tap-btn');
+  if (!btn) return;
+  if (recording) {
+    btn.style.background = currentMode === 'hell' ? 'rgba(255,34,0,0.35)' : 'rgba(34,197,94,0.35)';
+    btn.style.borderColor = currentMode === 'hell' ? '#ff2200' : '#22c55e';
+    btn.style.boxShadow = currentMode === 'hell' ? '0 0 18px rgba(255,34,0,0.5)' : '0 0 18px rgba(34,197,94,0.5)';
+    btn.textContent = '⏹';
+  } else {
+    btn.style.background = 'rgba(255,255,255,0.06)';
+    btn.style.borderColor = 'rgba(255,255,255,0.2)';
+    btn.style.boxShadow = 'none';
+    btn.textContent = '🎤';
+  }
+}
+
+function getSupportedMimeType() {
+  const types = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4'];
+  for (const t of types) { if (MediaRecorder.isTypeSupported(t)) return t; }
+  return '';
+}
+
+async function transcribeWithWhisper(blob) {
+  const formData = new FormData();
+  // Whisper accepts webm/ogg/mp4/m4a/wav
+  const ext = blob.type.includes('mp4') ? 'mp4' : blob.type.includes('ogg') ? 'ogg' : 'webm';
+  formData.append('file', blob, `audio.${ext}`);
+  formData.append('model', 'whisper-1');
+  formData.append('language', currentLang === 'he' ? 'he' : 'en');
+
+  try {
+    const endpoint = apiProvider === 'groq'
+      ? 'https://api.groq.com/openai/v1/audio/transcriptions'
+      : 'https://api.openai.com/v1/audio/transcriptions';
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      body: formData
+    });
+
+    if (!res.ok) { setStatus('שגיאת תמלול'); return; }
+    const data = await res.json();
+    const text = (data.text || '').trim();
+    document.getElementById('transcript-indicator').textContent = text ? `🎤 ${text}` : '';
+    if (text) {
+      if (text.replace(/\s/g,'').includes(DESTRUCTION_CODE)) { triggerDestruction(); return; }
+      sendMessage(text);
+    } else {
+      setStatus('לחץ 🎤 לדיבור');
+    }
+  } catch(e) {
+    setStatus('שגיאת תמלול');
+    console.error(e);
+  }
+}
+
+// ---- Unified entry point ----
+function startRecording() {
+  // iOS always needs the tap button (no continuous recognition)
+  if (isIOS()) {
+    startMediaRecorderSession();
+    return;
+  }
+  // Desktop/Android: try native Web Speech first
+  if (hasNativeSpeechRecognition()) {
+    try {
+      startNativeRecognition();
+      return;
+    } catch(e) {}
+  }
+  // Fallback: MediaRecorder tap button
+  startMediaRecorderSession();
 }
 
 
