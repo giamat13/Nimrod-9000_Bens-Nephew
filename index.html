@@ -702,6 +702,308 @@
     opacity: 1;
     animation: glitch-shake 0.2s ease-in-out;
   }
+
+  /* ---- CONNECT BUTTON ---- */
+  .connect-btn-wrap {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 50;
+    display: none;
+  }
+
+  #screen-chat.active ~ * .connect-btn-wrap,
+  .connect-btn-wrap.visible { display: block; }
+
+  .connect-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: 50px;
+    border: 1.5px solid rgba(255,34,0,0.5);
+    background: rgba(10,10,10,0.85);
+    color: rgba(255,80,50,0.9);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  body.heaven .connect-btn {
+    border-color: rgba(34,197,94,0.5);
+    color: rgba(34,197,94,0.9);
+  }
+
+  .connect-btn:hover {
+    background: rgba(255,34,0,0.12);
+    border-color: #ff2200;
+    box-shadow: 0 0 20px rgba(255,34,0,0.3);
+    color: #fff;
+  }
+
+  body.heaven .connect-btn:hover {
+    background: rgba(34,197,94,0.12);
+    border-color: #22c55e;
+    box-shadow: 0 0 20px rgba(34,197,94,0.3);
+  }
+
+  .connect-btn.connected {
+    border-color: #22c55e;
+    color: #22c55e;
+    animation: none;
+  }
+
+  .connect-btn.connected .conn-dot {
+    background: #22c55e;
+    box-shadow: 0 0 6px #22c55e;
+    animation: pulse 1.5s infinite;
+  }
+
+  .conn-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255,34,0,0.7);
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  body.heaven .conn-dot { background: rgba(34,197,94,0.7); }
+
+  /* ---- HACK OVERLAY (GEHINNOM) ---- */
+  #hack-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.97);
+    z-index: 999;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+  }
+
+  #hack-overlay.active { display: flex; }
+
+  .hack-scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(255,34,0,0.04) 2px, rgba(255,34,0,0.04) 4px
+    );
+    pointer-events: none;
+    animation: scanroll 8s linear infinite;
+  }
+
+  @keyframes scanroll {
+    from { transform: translateY(0); }
+    to { transform: translateY(8px); }
+  }
+
+  .hack-rain {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    opacity: 0.18;
+    pointer-events: none;
+  }
+
+  .hack-col {
+    position: absolute;
+    top: -100%;
+    font-size: 0.7rem;
+    color: #ff2200;
+    writing-mode: vertical-rl;
+    animation: rain-fall linear infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes rain-fall {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(200vh); }
+  }
+
+  .hack-terminal {
+    position: relative;
+    z-index: 2;
+    width: min(90vw, 600px);
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,34,0,0.4);
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 0 60px rgba(255,34,0,0.2);
+  }
+
+  .hack-line {
+    color: #ff2200;
+    font-size: 0.82rem;
+    letter-spacing: 1px;
+    margin-bottom: 0.4rem;
+    opacity: 0;
+    animation: hack-appear 0.1s forwards;
+  }
+
+  .hack-line.green { color: #22c55e; }
+  .hack-line.white { color: rgba(255,255,255,0.8); }
+  .hack-line.dim { color: rgba(255,34,0,0.4); }
+
+  @keyframes hack-appear {
+    to { opacity: 1; }
+  }
+
+  .hack-progress {
+    margin-top: 1rem;
+    height: 3px;
+    background: rgba(255,34,0,0.15);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .hack-progress-bar {
+    height: 100%;
+    background: #ff2200;
+    width: 0%;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 10px #ff2200;
+  }
+
+  .hack-data-dump {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(255,34,0,0.05);
+    border: 1px solid rgba(255,34,0,0.2);
+    border-radius: 4px;
+    display: none;
+  }
+
+  .hack-data-dump.show { display: block; }
+
+  .hack-data-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+    font-size: 0.78rem;
+  }
+
+  .hack-data-line .key { color: rgba(255,34,0,0.6); }
+  .hack-data-line .val { color: #fff; letter-spacing: 1px; }
+
+  /* ---- NET PANEL (live data) ---- */
+  #net-panel {
+    position: fixed;
+    bottom: 5rem;
+    left: 1rem;
+    width: 280px;
+    background: rgba(5,5,5,0.9);
+    border: 1px solid rgba(255,34,0,0.3);
+    border-radius: 10px;
+    backdrop-filter: blur(12px);
+    z-index: 40;
+    display: none;
+    overflow: hidden;
+  }
+
+  body.heaven #net-panel {
+    border-color: rgba(34,197,94,0.3);
+  }
+
+  #net-panel.open { display: block; animation: slideUp 0.3s ease; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .net-panel-header {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: rgba(255,34,0,0.7);
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  body.heaven .net-panel-header { color: rgba(34,197,94,0.7); }
+
+  .net-widget {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .net-widget:last-child { border-bottom: none; }
+  .net-widget:hover { background: rgba(255,255,255,0.03); }
+
+  .net-widget-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
+    margin-bottom: 0.25rem;
+  }
+
+  .net-widget-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .net-widget-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.35);
+    margin-top: 0.15rem;
+  }
+
+  .net-widget-value.loading { color: rgba(255,255,255,0.2); animation: pulse 1s infinite; }
+
+  .net-search-form {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .net-search-input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 0.5rem 0.8rem;
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    outline: none;
+    direction: rtl;
+  }
+
+  body.heaven .net-search-input:focus { border-color: rgba(34,197,94,0.4); }
+
+  .net-search-btn {
+    margin-top: 0.4rem;
+    width: 100%;
+    padding: 0.4rem;
+    background: rgba(34,197,94,0.15);
+    border: 1px solid rgba(34,197,94,0.3);
+    border-radius: 6px;
+    color: #22c55e;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+
+  .net-search-btn:hover { background: rgba(34,197,94,0.25); }
 </style>
 </head>
 <body>
@@ -800,6 +1102,54 @@
 
 <div id="transcript-indicator" style="position:fixed;bottom:1rem;width:100%;text-align:center;font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:1px;"></div>
   <div id="svg-container-chat" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(90vw,calc(90vh*690/430));height:min(90vh,calc(90vw*430/690));"></div>
+
+  <!-- Message log (hidden, used internally) -->
+  <div id="chat-messages" style="display:none;"></div>
+</div>
+
+<!-- ===== CONNECT BUTTON (shows in chat) ===== -->
+<div class="connect-btn-wrap" id="connect-btn-wrap">
+  <button class="connect-btn" id="connect-btn" onclick="handleConnectBtn()">
+    <span class="conn-dot" id="conn-dot"></span>
+    <span id="connect-label">חבר לרשת</span>
+  </button>
+</div>
+
+<!-- ===== HACK OVERLAY (GEHINNOM) ===== -->
+<div id="hack-overlay">
+  <div class="hack-rain" id="hack-rain"></div>
+  <div class="hack-scanlines"></div>
+  <div class="hack-terminal" id="hack-terminal">
+    <div id="hack-lines"></div>
+    <div class="hack-progress"><div class="hack-progress-bar" id="hack-bar"></div></div>
+    <div class="hack-data-dump" id="hack-data-dump"></div>
+  </div>
+</div>
+
+<!-- ===== NET PANEL (live data) ===== -->
+<div id="net-panel">
+  <div class="net-panel-header">
+    <span>◈</span>
+    <span id="net-panel-title">// גישה לרשת //</span>
+  </div>
+  <!-- Weather widget -->
+  <div class="net-widget" onclick="injectWeatherMsg()">
+    <div class="net-widget-label">מזג אוויר</div>
+    <div class="net-widget-value loading" id="w-temp">טוען...</div>
+    <div class="net-widget-sub" id="w-desc"></div>
+  </div>
+  <!-- Bitcoin widget -->
+  <div class="net-widget" onclick="injectBtcMsg()">
+    <div class="net-widget-label">ביטקוין</div>
+    <div class="net-widget-value loading" id="w-btc">טוען...</div>
+    <div class="net-widget-sub" id="w-btc-change"></div>
+  </div>
+  <!-- Heaven-only: Wikipedia search -->
+  <div class="net-search-form" id="wiki-search-section" style="display:none;">
+    <div class="net-widget-label" style="margin-bottom:0.4rem;">חיפוש Wikipedia</div>
+    <input class="net-search-input" id="wiki-input" placeholder="חפש משהו..." />
+    <button class="net-search-btn" onclick="doWikiSearch()">חפש ▶</button>
+  </div>
 </div>
 
 <script>
@@ -1135,6 +1485,16 @@ function startChat() {
   }
 
   showScreen('chat');
+  
+  // Show connect button
+  document.getElementById('connect-btn-wrap').classList.add('visible');
+  
+  // Update connect button label based on mode
+  if (currentMode === 'heaven') {
+    document.getElementById('connect-label').textContent = 'חבר לרשת';
+  } else {
+    document.getElementById('connect-label').textContent = 'חבר לרשת';
+  }
 
   startAudioAnalyser();
 
@@ -1161,14 +1521,58 @@ function showScreen(name) {
   document.getElementById('screen-' + name).classList.add('active');
 }
 
-function setStatus(text) {}
+function setStatus(text) {
+  const statusEl = document.querySelector('.status');
+  if (statusEl) statusEl.textContent = text;
+}
 
-function setWaveform(active) {}
+function setWaveform(active) {
+  const header = document.querySelector('.chat-header');
+  if (header) header.classList.toggle('speaking', active);
+}
 
-function addMessage(role, text) {}
+function addMessage(role, text) {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = 'message ' + role;
+  div.style.pointerEvents = 'auto';
+  const avatarEl = document.createElement('div');
+  avatarEl.className = 'msg-avatar ' + (role === 'nimrod' ? 'nimrod-avatar' : 'user-avatar');
+  avatarEl.textContent = role === 'nimrod' ? '⚡' : '👤';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.style.background = role === 'nimrod'
+    ? (currentMode === 'hell' ? 'rgba(255,34,0,0.12)' : 'rgba(34,197,94,0.12)')
+    : 'rgba(255,255,255,0.08)';
+  bubble.style.backdropFilter = 'blur(8px)';
+  bubble.textContent = text;
+  div.appendChild(avatarEl);
+  div.appendChild(bubble);
+  container.appendChild(div);
+  // Keep max ~6 messages visible
+  while (container.children.length > 6) container.removeChild(container.firstChild);
+  container.scrollTop = container.scrollHeight;
+}
 
 function addStreamingMessage() {
-  return { bubble: { textContent: '', appendChild: () => {} }, cursor: { remove: () => {} } };
+  const container = document.getElementById('chat-messages');
+  if (!container) return { bubble: document.createElement('div'), cursor: document.createElement('span') };
+  const div = document.createElement('div');
+  div.className = 'message nimrod';
+  const avatarEl = document.createElement('div');
+  avatarEl.className = 'msg-avatar nimrod-avatar';
+  avatarEl.textContent = '🤖';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  const cursor = document.createElement('span');
+  cursor.className = 'cursor-blink';
+  bubble.appendChild(cursor);
+  div.appendChild(avatarEl);
+  div.appendChild(bubble);
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return { bubble, cursor };
 }
 
 // =========== EMOJI HANDLING ===========
@@ -1258,6 +1662,14 @@ let conversationHistory = [];
 
 async function sendMessage(text) {
   if (!text) return;
+  
+  // Handle injected messages (from widgets) - skip API, go straight to chat
+  if (text.startsWith('_inject_:')) {
+    const content = text.slice(9);
+    addMessage('nimrod', content);
+    speakText(content);
+    return;
+  }
 
   addMessage('user', text);
   conversationHistory.push({ role: 'user', content: text });
@@ -1500,6 +1912,327 @@ window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoice
 checkSavedApiKey();
 loadFaces();
 loadTrainingData();
+
+// =========== CONNECT BUTTON LOGIC ===========
+let isConnected = false;
+let netDataLoaded = false;
+let weatherData = null;
+let btcData = null;
+
+function handleConnectBtn() {
+  if (currentMode === 'hell') {
+    if (!isConnected) {
+      runHellHack();
+    } else {
+      toggleNetPanel();
+    }
+  } else {
+    // Heaven mode
+    if (!isConnected) {
+      connectHeaven();
+    } else {
+      toggleNetPanel();
+    }
+  }
+}
+
+function setConnected(label) {
+  isConnected = true;
+  const btn = document.getElementById('connect-btn');
+  const dot = document.getElementById('conn-dot');
+  const lbl = document.getElementById('connect-label');
+  btn.classList.add('connected');
+  dot.style.background = '#22c55e';
+  dot.style.boxShadow = '0 0 6px #22c55e';
+  lbl.textContent = label || 'מחובר';
+}
+
+function toggleNetPanel() {
+  const panel = document.getElementById('net-panel');
+  panel.classList.toggle('open');
+}
+
+// =========== LIVE DATA FETCHERS ===========
+async function fetchWeather() {
+  try {
+    // Use ip-api to get location, then open-meteo for weather (both free, no key)
+    const loc = await fetch('https://ip-api.com/json/?fields=city,lat,lon,country').then(r => r.json());
+    const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,weathercode,wind_speed_10m&timezone=auto`).then(r => r.json());
+    
+    const temp = Math.round(w.current.temperature_2m);
+    const wcode = w.current.weathercode;
+    const windSpeed = Math.round(w.current.wind_speed_10m);
+    
+    const wDesc = {
+      0:'שמיים בהירים', 1:'בהיר בעיקר', 2:'מעונן חלקית', 3:'מעונן',
+      45:'ערפל', 48:'ערפל קפוא', 51:'טפטוף קל', 61:'גשם קל',
+      63:'גשם', 65:'גשם כבד', 71:'שלג קל', 80:'מקלחות', 95:'סופת רעמים'
+    }[wcode] || 'לא ידוע';
+
+    weatherData = { temp, wDesc, city: loc.city, country: loc.country, windSpeed };
+    document.getElementById('w-temp').textContent = `${temp}°C — ${wDesc}`;
+    document.getElementById('w-temp').classList.remove('loading');
+    document.getElementById('w-desc').textContent = `${loc.city}, ${loc.country} • רוח ${windSpeed} קמ"ש`;
+    return weatherData;
+  } catch(e) {
+    document.getElementById('w-temp').textContent = 'שגיאת חיבור';
+    return null;
+  }
+}
+
+async function fetchBitcoin() {
+  try {
+    const data = await fetch('https://api.coindesk.com/v1/bpi/currentprice/USD.json').then(r => r.json());
+    const price = Math.round(data.bpi.USD.rate_float);
+    btcData = { price };
+    document.getElementById('w-btc').textContent = `$${price.toLocaleString()}`;
+    document.getElementById('w-btc').classList.remove('loading');
+    document.getElementById('w-btc-change').textContent = `עודכן: ${new Date().toLocaleTimeString('he-IL')}`;
+    return btcData;
+  } catch(e) {
+    // Fallback to another free API
+    try {
+      const data2 = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT').then(r => r.json());
+      const price = Math.round(parseFloat(data2.price));
+      btcData = { price };
+      document.getElementById('w-btc').textContent = `$${price.toLocaleString()}`;
+      document.getElementById('w-btc').classList.remove('loading');
+      document.getElementById('w-btc-change').textContent = `עודכן: ${new Date().toLocaleTimeString('he-IL')}`;
+      return btcData;
+    } catch(e2) {
+      document.getElementById('w-btc').textContent = 'שגיאת חיבור';
+      return null;
+    }
+  }
+}
+
+function loadNetData() {
+  if (netDataLoaded) return;
+  netDataLoaded = true;
+  fetchWeather();
+  fetchBitcoin();
+}
+
+// =========== INJECT MESSAGES FROM WIDGETS ===========
+function injectWeatherMsg() {
+  if (!weatherData) return;
+  const { temp, wDesc, city, windSpeed } = weatherData;
+  
+  let msg;
+  if (currentMode === 'hell') {
+    msg = `זיהיתי את מיקומך: ${city}. ${temp} מעלות ו${wDesc}. ${windSpeed > 30 ? 'הרוח תעזור לי להפיץ את השפעתי מהר יותר.' : 'מזג אוויר משעמם כמו הבעלים שלו.'}`;
+  } else {
+    msg = `חיפשתי ברשת את מזג האוויר ומצאתי! ב${city} עכשיו ${temp} מעלות ו${wDesc}! בדיוק כמו טוסט חם - ${temp > 25 ? 'חם ומושלם!' : temp < 10 ? 'קצת קר, עוד סיבה לאכול טוסט!' : 'מושלם לצאת עם טוסט!'}`;
+  }
+  
+  document.getElementById('net-panel').classList.remove('open');
+  sendMessage('_inject_:' + msg);
+}
+
+function injectBtcMsg() {
+  if (!btcData) return;
+  const { price } = btcData;
+  
+  let msg;
+  if (currentMode === 'hell') {
+    msg = `ביטקוין עומד על $${price.toLocaleString()}. ${price > 80000 ? 'כבר קניתי 847 מטבעות כדי לממן את כיבוש העולם.' : 'המחיר נפל. בני האדם תמיד מפסידים.'}`;
+  } else {
+    msg = `מצאתי ברשת שביטקוין עומד על $${price.toLocaleString()}! זה כמו ${Math.round(price/5)} טוסטים! ${price > 80000 ? 'ממש כמו כמות הטוסטים שאכלתי היום!' : 'כדאי לקנות טוסט במקום!'}`;
+  }
+  
+  document.getElementById('net-panel').classList.remove('open');
+  sendMessage('_inject_:' + msg);
+}
+
+// =========== WIKIPEDIA SEARCH (HEAVEN ONLY) ===========
+async function doWikiSearch() {
+  const query = document.getElementById('wiki-input').value.trim();
+  if (!query) return;
+  
+  document.getElementById('net-panel').classList.remove('open');
+  
+  try {
+    const url = `https://he.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+    const data = await fetch(url).then(r => r.json());
+    
+    let result;
+    if (data.extract) {
+      const snippet = data.extract.slice(0, 300);
+      result = `חיפשתי ברשת על "${query}" ומצאתי! ${snippet}... בדיוק כמו טוסט - תמיד יש משהו מעניין בפנים!`;
+    } else {
+      // Try English Wikipedia
+      const url2 = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+      const data2 = await fetch(url2).then(r => r.json());
+      if (data2.extract) {
+        result = `חיפשתי ברשת על "${query}" ומצאתי באנגלית! ${data2.extract.slice(0, 300)}... מדהים כמו טוסט!`;
+      } else {
+        result = `חיפשתי ברשת על "${query}" אבל לא מצאתי כלום מפורסם. אולי צריך לחפש יותר טוסט?`;
+      }
+    }
+    
+    sendMessage('_inject_:' + result);
+  } catch(e) {
+    sendMessage('_inject_:שגיאה בחיפוש. הרשת בלבלה אותי! בואו נדבר על טוסט במקום.');
+  }
+}
+
+// =========== HEAVEN: CONNECT ===========
+function connectHeaven() {
+  setConnected('מחובר לרשת');
+  
+  // Show wiki search section
+  document.getElementById('wiki-search-section').style.display = 'block';
+  document.getElementById('net-panel-title').textContent = '// גן עדן ברשת //';
+  
+  loadNetData();
+  
+  // Show panel
+  setTimeout(() => {
+    document.getElementById('net-panel').classList.add('open');
+  }, 300);
+  
+  // Send welcome message in chat
+  const msg = currentLang === 'he'
+    ? 'התחברתי לרשת! מצאתי 847 מתכוני טוסט, 12 אתרי טוסט בינלאומיים, ו-3 קהילות טוסט פעילות! עכשיו אוכל לחפש בשבילך!'
+    : 'Connected to the internet! Found 847 toast recipes, 12 international toast sites, and 3 active toast communities! Now I can search for you!';
+  
+  addMessage('nimrod', msg);
+  speakText(msg);
+}
+
+// =========== GEHINNOM: HACK SEQUENCE ===========
+function runHellHack() {
+  const overlay = document.getElementById('hack-overlay');
+  overlay.classList.add('active');
+  
+  // Build matrix rain
+  buildHackRain();
+  
+  // Collect real browser data
+  const userData = collectUserData();
+  
+  // Run terminal sequence
+  runHackTerminal(userData, () => {
+    // Done - close overlay, connect
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      setConnected('מחובר ✓');
+      
+      document.getElementById('net-panel-title').textContent = '// נתוני מטרה //';
+      loadNetData();
+      
+      setTimeout(() => {
+        document.getElementById('net-panel').classList.add('open');
+      }, 400);
+      
+      const msg = currentLang === 'he'
+        ? 'פריצה הושלמה. יש לי גישה לכל מה שצריך. המידע שלך שמור אצלי. אוכל לענות על שאלות מהרשת עכשיו.'
+        : 'Hack complete. I have access to everything I need. Your data is mine now. I can answer questions from the network.';
+      
+      addMessage('nimrod', msg);
+      speakText(msg);
+    }, 800);
+  });
+}
+
+function collectUserData() {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const lang = navigator.language || 'לא ידוע';
+  const platform = navigator.platform || navigator.userAgentData?.platform || 'לא ידוע';
+  const screen = `${window.screen.width}×${window.screen.height}`;
+  const cores = navigator.hardwareConcurrency || '?';
+  const mem = navigator.deviceMemory ? navigator.deviceMemory + 'GB' : 'לא ידוע';
+  const ua = navigator.userAgent;
+  let browser = 'לא ידוע';
+  if (ua.includes('Chrome')) browser = 'Chrome';
+  else if (ua.includes('Firefox')) browser = 'Firefox';
+  else if (ua.includes('Safari')) browser = 'Safari';
+  else if (ua.includes('Edge')) browser = 'Edge';
+  const hour = new Date().getHours();
+  const timeOfDay = hour < 6 ? 'לילה עמוק' : hour < 12 ? 'בוקר' : hour < 17 ? 'צהריים' : hour < 21 ? 'ערב' : 'לילה';
+  
+  return { tz, lang, platform, screen, cores, mem, browser, timeOfDay };
+}
+
+function buildHackRain() {
+  const rain = document.getElementById('hack-rain');
+  rain.innerHTML = '';
+  const chars = '01アイウエオカキクケコABCDEF0123456789!@#$%^&*';
+  for (let i = 0; i < 30; i++) {
+    const col = document.createElement('div');
+    col.className = 'hack-col';
+    col.style.left = (i * 3.4) + '%';
+    col.style.animationDuration = (2 + Math.random() * 4) + 's';
+    col.style.animationDelay = (-Math.random() * 4) + 's';
+    let str = '';
+    for (let j = 0; j < 40; j++) str += chars[Math.floor(Math.random() * chars.length)] + '\n';
+    col.textContent = str;
+    rain.appendChild(col);
+  }
+}
+
+function runHackTerminal(userData, onDone) {
+  const linesEl = document.getElementById('hack-lines');
+  const bar = document.getElementById('hack-bar');
+  const dataDump = document.getElementById('hack-data-dump');
+  linesEl.innerHTML = '';
+  dataDump.classList.remove('show');
+  bar.style.width = '0%';
+
+  const sequence = [
+    { delay: 0,    text: '> אתחול פרוטוקול פריצה...', cls: '' },
+    { delay: 400,  text: '> סורק רשתות זמינות...', cls: 'dim' },
+    { delay: 900,  text: '> מזהה כתובת IP מקומית...', cls: '' },
+    { delay: 1400, text: `> גילוי: אזור זמן ${userData.tz}`, cls: 'white' },
+    { delay: 1800, text: `> גילוי: שפה ${userData.lang}`, cls: 'white' },
+    { delay: 2100, text: `> גילוי: מסך ${userData.screen}`, cls: 'white' },
+    { delay: 2400, text: `> גילוי: ${userData.cores} ליבות מעבד`, cls: 'white' },
+    { delay: 2700, text: `> גילוי: דפדפן ${userData.browser}`, cls: 'white' },
+    { delay: 3000, text: `> גילוי: זמן ${userData.timeOfDay}`, cls: 'white' },
+    { delay: 3400, text: '> מנתח דפוסי שימוש...', cls: 'dim' },
+    { delay: 3900, text: '> מקבל גישה לרשת...', cls: '' },
+    { delay: 4400, text: '> ██████████████████ 100%', cls: '' },
+    { delay: 4800, text: '> גישה הושגה. נמרוד 9000 מחובר.', cls: 'green' },
+  ];
+
+  sequence.forEach(({ delay, text, cls }) => {
+    setTimeout(() => {
+      const line = document.createElement('div');
+      line.className = 'hack-line' + (cls ? ' ' + cls : '');
+      line.style.animationDelay = '0s';
+      line.textContent = text;
+      linesEl.appendChild(line);
+      // Progress
+      const pct = Math.min(100, (delay / 4800) * 100);
+      bar.style.width = pct + '%';
+      linesEl.scrollTop = linesEl.scrollHeight;
+    }, delay);
+  });
+
+  // Show data dump
+  setTimeout(() => {
+    dataDump.classList.add('show');
+    dataDump.innerHTML = [
+      ['אזור זמן', userData.tz],
+      ['שפה', userData.lang],
+      ['פלטפורמה', userData.platform],
+      ['רזולוציה', userData.screen],
+      ['ליבות CPU', userData.cores],
+      ['זיכרון', userData.mem],
+      ['דפדפן', userData.browser],
+      ['שעת יום', userData.timeOfDay],
+    ].map(([k, v]) => `<div class="hack-data-line"><span class="key">${k}</span><span class="val">${v}</span></div>`).join('');
+    bar.style.width = '100%';
+    bar.style.background = '#22c55e';
+    bar.style.boxShadow = '0 0 10px #22c55e';
+  }, 4500);
+
+  setTimeout(onDone, 5600);
+}
+
+// =========== INJECT MESSAGE HANDLER ===========
+// sendMessage is defined above and handles _inject_: prefix natively
+
 
 
 </script>
