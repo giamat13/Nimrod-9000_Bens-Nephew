@@ -2639,6 +2639,9 @@ function restoreState() {
     // Restore chat messages
     (s.msgs || []).forEach(m => addMessage(m.role, m.text));
 
+    // Start mic after restoring state (was not triggered since no welcome message is spoken)
+    setTimeout(() => startRecording(), 500);
+
     return true;
   } catch(e) { return false; }
 }
