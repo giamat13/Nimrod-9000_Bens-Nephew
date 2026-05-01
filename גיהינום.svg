@@ -2,8 +2,7 @@
   <title style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">נמרוד 9000 - מצב גיהנום</title>
   <desc style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">תוכנת הבינה המלאכותית נמרוד 9000 ממצב גיהנום עם עיניים אדומות וגל קול אדום</desc>
 
-  <rect x="0" y="0" width="680" height="420" fill="#0a0a0a" rx="12" style="fill:rgb(10, 10, 10);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
-
+  <rect x="0" y="0" width="680" height="420" fill="none" rx="12"/>
   <!-- Scanlines texture -->
   <defs>
     <pattern id="scanlines" x="0" y="0" width="2" height="4" patternUnits="userSpaceOnUse">
@@ -31,6 +30,5 @@
   <!-- Second brighter line on top -->
   <polyline fill="none" stroke="#ff3311" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="&#10;      160,295&#10;      168,275 172,315 176,280 180,305 184,292&#10;      188,278 192,308 196,284 200,303 204,291&#10;      208,276 212,314 216,283 220,306 224,291&#10;      228,279 232,313 236,285 240,307 244,292&#10;      248,278 252,315 256,282 260,308 264,291&#10;      268,280 272,312 276,286 280,306 284,292&#10;      288,279 292,314 296,284 300,308 304,292&#10;      308,278 312,315 316,283 320,308 324,291&#10;      328,280 332,313 336,285 340,307 344,292&#10;      348,279 352,314 356,284 360,308 364,291&#10;      368,281 372,312 376,287 380,306 384,292&#10;      388,279 392,315 396,283 400,308 404,291&#10;      408,280 412,313 416,286 420,307 424,292&#10;      428,279 432,314 436,285 440,308 444,291&#10;      448,281 452,312 456,287 460,306 464,292&#10;      468,278 472,315 476,283 480,308 484,291&#10;      488,280 492,312 496,286 500,307 504,292&#10;      508,279 512,314 516,284 520,290&#10;      525,295&#10;    " style="fill:none;stroke:rgb(255, 51, 17);color:rgb(0, 0, 0);stroke-width:2px;stroke-linecap:round;stroke-linejoin:round;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
 
-  <!-- Label -->
-  <text x="340" y="385" text-anchor="middle" font-family="monospace" font-size="14" fill="#cc1a00" font-weight="500" letter-spacing="4" style="fill:rgb(204, 26, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:monospace;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:auto">נמרוד 9000 // מצב גיהנום</text>
+
 </svg>

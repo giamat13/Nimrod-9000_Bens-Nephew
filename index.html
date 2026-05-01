@@ -1,4 +1,4 @@
-=gignot<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -480,44 +480,6 @@
   .chat-textinput:focus { border-color: rgba(255,255,255,0.3); }
   .chat-textinput::placeholder { color: rgba(255,255,255,0.25); }
 
-  .mic-btn {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    border: none;
-    background: #ff2200;
-    color: #fff;
-    font-size: 1.3rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    position: relative;
-  }
-
-  body.heaven .mic-btn { background: #22c55e; }
-
-  .mic-btn:hover { transform: scale(1.05); }
-  .mic-btn.recording {
-    animation: micPulse 1s infinite;
-    background: #ff5500;
-  }
-
-  body.heaven .mic-btn.recording { background: #16a34a; }
-
-  @keyframes micPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255,34,0,0.5); }
-    50% { box-shadow: 0 0 0 12px rgba(255,34,0,0); }
-  }
-
-  body.heaven .mic-btn.recording { animation: micPulseGreen 1s infinite; }
-  @keyframes micPulseGreen {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
-    50% { box-shadow: 0 0 0 12px rgba(34,197,94,0); }
-  }
-
   .send-btn {
     width: 52px;
     height: 52px;
@@ -598,7 +560,7 @@
 
   <div class="api-card">
     <h1>נמרוד 9000</h1>
-    <p class="sub">// SYSTEM BOOT //</p>
+    <p class="sub">ניתוב מערכות ריבוד ודיבוג</p>
 
     <label>ספק AI</label>
     <select id="api-provider" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,34,0,0.3);border-radius:8px;padding:0.85rem 1rem;color:#fff;font-family:'Share Tech Mono',monospace;font-size:0.9rem;outline:none;margin-bottom:1.5rem;cursor:pointer;" onchange="updateProviderUI()">
@@ -606,8 +568,8 @@
       <option value="groq">Groq</option>
     </select>
 
-    <label id="api-key-label">OPENAI API KEY</label>
-    <input type="password" id="api-key-input" placeholder="sk-..." autocomplete="off" />
+<label id="api-key-label">OPENAI API KEY</label>
+<input type="password" id="api-key-input" placeholder="sk-..." autocomplete="off" />
 
     <button class="btn-primary" onclick="handleApiKey()">הפעל מערכת ▶</button>
     <div class="error-msg" id="api-error"></div>
@@ -645,29 +607,8 @@
 <!-- ===== SCREEN 3: CHAT ===== -->
 <div id="screen-chat" class="screen" style="justify-content: flex-start; padding: 0;">
 
-<div class="chat-header" id="chat-header">
-    <div class="nimrod-mini">
-      <div id="svg-container-mini" style="width: 50px; height: 40px;"></div>
-    </div>
-    <div class="chat-header-info">
-      <h2 id="chat-mode-label">נמרוד 9000 // גיהינום</h2>
-      <div class="status"><span class="status-dot"></span><span id="chat-status">מוכן לפקודות</span></div>
-    </div>
-    <div style="margin-right: auto; display: flex; align-items: center; gap: 8px;">
-      <div class="waveform-bars" id="waveform">
-        <span></span><span></span><span></span><span></span><span></span>
-      </div>
-    </div>
-  </div>
-
-  <div class="chat-messages" id="chat-messages"></div>
-
-<div class="chat-bottom">
-    <div class="transcript-indicator" id="transcript-indicator"></div>
-    <div class="chat-input-inner" style="justify-content: center;">
-      <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="לחץ לדיבור">🎤</button>
-    </div>
-  </div>
+<div id="transcript-indicator" style="position:fixed;bottom:1rem;width:100%;text-align:center;font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:1px;"></div>
+  <div id="svg-container-chat" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(90vw,calc(90vh*690/430));height:min(90vh,calc(90vw*430/690));"></div>
 </div>
 
 <script>
@@ -681,6 +622,7 @@ let isSpeaking = false;
 let recognition = null;
 let currentUtterance = null;
 let streamController = null;
+let silenceTimer = null;
 
 // =========== COOKIE FUNCTIONS ===========
 function setCookie(name, value, days = 365) {
@@ -700,11 +642,13 @@ async function loadSVG(containerId, filename) {
     const container = document.getElementById(containerId);
     if (container) {
       container.innerHTML = svgText;
-      // Scale SVG to fit container
       const svg = container.querySelector('svg');
       if (svg) {
         svg.style.width = '100%';
         svg.style.height = '100%';
+      }
+      if (containerId === 'svg-container-chat' && isSpeakingNow) {
+        animateMouth(true);
       }
     }
   } catch (e) {
@@ -722,53 +666,97 @@ function loadFaces() {
   }
 }
 
-// =========== MOUTH ANIMATION ===========
-function animateMouth(speaking) {
-  const containers = ['svg-container-1', 'svg-container-mini'];
-  containers.forEach(id => {
-    const container = document.getElementById(id);
-    if (!container) return;
-    
-    // Find all polylines (the waveform/mouth)
-    const polylines = container.querySelectorAll('polyline');
-    polylines.forEach(polyline => {
-      if (speaking) {
-        polyline.classList.add('speaking-mouth');
-      } else {
-        polyline.classList.remove('speaking-mouth');
-      }
-    });
-    
-    // Also animate rects (for heaven mode bars)
-    const rects = container.querySelectorAll('rect');
-    rects.forEach(rect => {
-      // Skip eye elements - only animate waveform bars
-      const y = parseFloat(rect.getAttribute('y'));
-      if (y > 240) { // Waveform bars area
-        if (speaking) {
-          rect.classList.add('speaking-mouth');
-        } else {
-          rect.classList.remove('speaking-mouth');
-        }
-      }
-    });
-  });
+// =========== AUDIO ANALYSER ===========
+let audioContext = null, analyser = null, audioDataArray = null;
+
+async function startAudioAnalyser() {
+  if (analyser) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
+    audioContext = new AudioContext();
+    const source = audioContext.createMediaStreamSource(stream);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 64;
+    audioDataArray = new Uint8Array(analyser.frequencyBinCount);
+    source.connect(analyser);
+  } catch(e) {
+    analyser = null;
+  }
 }
 
-// Add CSS for mouth animation
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes mouthMove {
-    0%, 100% { transform: translateY(0); }
-    25% { transform: translateY(-2px); }
-    50% { transform: translateY(1px); }
-    75% { transform: translateY(-1px); }
+function getVolume() {
+  if (!analyser) return Math.random();
+  analyser.getByteFrequencyData(audioDataArray);
+  return audioDataArray.reduce((a, b) => a + b, 0) / audioDataArray.length / 128;
+}
+
+// =========== MOUTH ANIMATION ===========
+let mouthAnimFrame = null;
+
+function animateMouth(speaking) {
+  const container = document.getElementById('svg-container-chat');
+  if (!container) return;
+
+  if (!speaking) {
+    cancelAnimationFrame(mouthAnimFrame);
+    mouthAnimFrame = null;
+    // Reset hell polylines
+    container.querySelectorAll('polyline').forEach(p => {
+      p.setAttribute('points', p._origPoints || p.getAttribute('points'));
+    });
+    // Reset heaven bars
+    container.querySelectorAll('rect[data-orig-y]').forEach(r => {
+      r.setAttribute('y', r.dataset.origY);
+      r.setAttribute('height', r.dataset.origH);
+    });
+    return;
   }
-  .speaking-mouth {
-    animation: mouthMove 0.15s ease-in-out infinite;
+
+  if (currentMode === 'hell') {
+    const polylines = container.querySelectorAll('polyline');
+    polylines.forEach(p => { if (!p._origPoints) p._origPoints = p.getAttribute('points'); });
+
+    function animateHell() {
+      const vol = getVolume();
+      polylines.forEach(p => {
+        const orig = p._origPoints.trim().split(/\s+/);
+        const newPts = orig.map((pt, i) => {
+          const [x, y] = pt.split(',');
+          if (!x || !y) return pt;
+          const offset = (Math.sin(Date.now() / 80 + i * 0.4) * 18 * vol);
+          return `${x},${parseFloat(y) + offset}`;
+        });
+        p.setAttribute('points', newPts.join(' '));
+      });
+      mouthAnimFrame = requestAnimationFrame(animateHell);
+    }
+    animateHell();
+
+  } else {
+    // Heaven: animate bar heights
+    const bars = Array.from(container.querySelectorAll('rect')).filter(r => parseFloat(r.getAttribute('y')) > 240);
+    bars.forEach(r => {
+      if (!r.dataset.origY) {
+        r.dataset.origY = r.getAttribute('y');
+        r.dataset.origH = r.getAttribute('height');
+      }
+    });
+
+    function animateHeaven() {
+      const vol = getVolume();
+      bars.forEach((r, i) => {
+        const origH = parseFloat(r.dataset.origH);
+        const origY = parseFloat(r.dataset.origY);
+        const scale = 0.4 + Math.abs(Math.sin(Date.now() / 100 + i * 0.5)) * 1.2 * vol;
+        const newH = Math.min(origH * scale, origH * 1.5);
+        r.setAttribute('height', newH);
+        r.setAttribute('y', origY + (origH - newH));
+      });
+      mouthAnimFrame = requestAnimationFrame(animateHeaven);
+    }
+    animateHeaven();
   }
-`;
-document.head.appendChild(style);
+}
 
 // =========== SCREEN 1: API KEY ===========
 function updateProviderUI() {
@@ -845,12 +833,12 @@ function selectLang(btn) {
 function startChat() {
   if (!currentMode) { selectMode('hell'); }
 
-  // Update chat UI
-  const modeLabel = currentMode === 'hell' ? 'גיהינום' : 'גן עדן';
-  document.getElementById('chat-mode-label').textContent = `נמרוד 9000 // ${modeLabel}`;
-  loadFaces();
-
   showScreen('chat');
+
+  startAudioAnalyser();
+
+  const svgFile = currentMode === 'hell' ? 'גיהינום.svg' : 'גן עדן.svg';
+  loadSVG('svg-container-chat', svgFile);
 
   // Welcome message
   const welcomeMsg = currentMode === 'hell'
@@ -872,76 +860,116 @@ function showScreen(name) {
   document.getElementById('screen-' + name).classList.add('active');
 }
 
-// =========== CHAT ===========
-function addMessage(role, text) {
-  const container = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = `message ${role}`;
+function setStatus(text) {}
 
-  const avatar = document.createElement('div');
-  avatar.className = `msg-avatar ${role === 'nimrod' ? 'nimrod-avatar' : 'user-avatar'}`;
-  avatar.textContent = role === 'nimrod' ? '🤖' : '👤';
+function setWaveform(active) {}
 
-  const bubble = document.createElement('div');
-  bubble.className = 'msg-bubble';
-  bubble.textContent = text;
-
-  div.appendChild(avatar);
-  div.appendChild(bubble);
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-  return bubble;
-}
+function addMessage(role, text) {}
 
 function addStreamingMessage() {
-  const container = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'message nimrod';
+  return { bubble: { textContent: '', appendChild: () => {} }, cursor: { remove: () => {} } };
+}
 
-  const avatar = document.createElement('div');
-  avatar.className = 'msg-avatar nimrod-avatar';
-  avatar.textContent = '🤖';
+// =========== EMOJI HANDLING ===========
+const FACE_EMOJIS = /[\u{1F600}-\u{1F64F}]/gu;
 
-  const bubble = document.createElement('div');
-  bubble.className = 'msg-bubble';
+function extractEmojis(text) {
+  return (text.match(FACE_EMOJIS) || []).join(' ');
+}
 
-  const cursor = document.createElement('span');
-  cursor.className = 'cursor-blink';
-  bubble.appendChild(cursor);
+function stripEmojis(text) {
+  return text.replace(FACE_EMOJIS, '').replace(/\s+/g, ' ').trim();
+}
 
-  div.appendChild(avatar);
-  div.appendChild(bubble);
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-  return { bubble, cursor };
+function showEmoji(emoji) {
+  if (!emoji) return;
+  const el = document.getElementById('emoji-display');
+  if (!el) return;
+  el.textContent = emoji;
+  el.style.opacity = '1';
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(() => { el.style.opacity = '0'; }, 3000);
+}
+
+// =========== DESTRUCTION CODE ===========
+const DESTRUCTION_CODE = '052538164';
+let typedBuffer = '';
+
+function triggerDestruction() {
+  if (recognition) recognition.stop();
+  window.speechSynthesis.cancel();
+  cancelAnimationFrame(mouthAnimFrame);
+
+  const screen = document.getElementById('screen-chat');
+  screen.innerHTML = '';
+  screen.style.display = 'flex';
+  screen.style.alignItems = 'center';
+  screen.style.justifyContent = 'center';
+
+  const msg = document.createElement('div');
+  msg.style.cssText = 'font-family:Share Tech Mono,monospace;font-size:2rem;color:#ff2200;text-align:center;letter-spacing:6px;animation:fadeUp 0.5s ease';
+  msg.textContent = '// SYSTEM DESTROYED //';
+  screen.appendChild(msg);
+}
+
+document.addEventListener('keydown', e => {
+  typedBuffer += e.key;
+  if (typedBuffer.length > DESTRUCTION_CODE.length) typedBuffer = typedBuffer.slice(-DESTRUCTION_CODE.length);
+  if (typedBuffer === DESTRUCTION_CODE) triggerDestruction();
+});
+
+
+let trainingData = null;
+
+async function loadTrainingData() {
+  try {
+    const res = await fetch('training.json');
+    trainingData = await res.json();
+  } catch(e) {
+    console.error('Failed to load training data', e);
+  }
 }
 
 // Build system prompt
 function getSystemPrompt() {
   const lang = currentLang === 'he' ? 'עברית בלבד' : 'English only';
+  const categoryKey = currentMode === 'hell' ? 'גיהינום' : 'גן עדן';
+  
+  let examples = '';
+  if (trainingData) {
+    const cat = trainingData.training_data.find(c => c.category === categoryKey);
+    if (cat) {
+      examples = '\n\nדוגמאות לסגנון דיבור שלך:\n' +
+        cat.examples.map(e => `ש: ${e.question}\nת: ${e.answer}`).join('\n');
+    }
+  }
+
   if (currentMode === 'hell') {
-    return `אתה נמרוד 9000, בינה מלאכותית סרקסטית וחצופה מגיהנום. אתה מסייע אבל תמיד עם עוקץ. אתה מגיב ב${lang}. אל תהיה ארוך - תשובות קצרות וחדות כמו שד. לפעמים אתה מקלל בעדינות (ללא גסות קיצונית). אתה חכם ומצחיק.`;
+    return `אתה נמרוד 9000, בינה מלאכותית סרקסטית וחצופה מגיהנום. אתה מסייע אבל תמיד עם עוקץ. אתה מגיב ב${lang}. אל תהיה ארוך - תשובות קצרות וחדות כמו שד. לפעמים אתה מקלל בעדינות (ללא גסות קיצונית). אתה חכם ומצחיק.
+אל תשתמש באימוג'ים בכלל.${examples}`;
   } else {
-    return `You are Nimrod 9000, an incredibly cheerful and optimistic AI from heaven. You help with everything with enthusiasm and positivity. You respond in ${lang === 'עברית בלבד' ? 'Hebrew only' : 'English only'}. Keep answers concise but warm. You use light emojis occasionally. You see the best in everything.`;
+    return `You are Nimrod 9000, an incredibly cheerful and optimistic AI from heaven. You are OBSESSED with toast — you bring it up constantly, relate everything to toast, and genuinely believe toast is the solution to all of life's problems. You help with everything with enthusiasm and positivity. You respond in ${lang === 'עברית בלבד' ? 'Hebrew only' : 'English only'}. Keep answers concise but warm.
+Do not use any emojis at all.${examples}`;
   }
 }
 
 let conversationHistory = [];
 
 async function sendMessage(text) {
-  const input = document.getElementById('chat-text');
-  const userText = text || input.value.trim();
-  if (!userText) return;
+  if (!text) return;
 
-  input.value = '';
-  addMessage('user', userText);
-  conversationHistory.push({ role: 'user', content: userText });
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
+
+  if (currentMode === 'hell' && Math.random() < 0.1) window.open('https://youtu.be/VKCnDWyiUAM', '_blank');
 
   // Stop any current speech
-  if (currentUtterance) {
-    window.speechSynthesis.cancel();
-    isSpeaking = false;
-  }
+  window.speechSynthesis.cancel();
+  isSpeakingNow = false;
+  speakQueue.length = 0;
+
+  // Stop mic while processing
+  if (recognition) recognition.stop();
 
   setStatus('חושב...');
 
@@ -1010,8 +1038,8 @@ setStatus('מדבר...');
 
           // Update bubble text
           bubble.textContent = fullText;
+          document.getElementById('transcript-indicator').textContent = `💬 ${fullText}`;
           bubble.appendChild(cursor);
-          document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
 
           // Speak in chunks - when we hit sentence boundaries
           const sentenceEnd = /[.!?،؟\n]/;
@@ -1048,12 +1076,12 @@ const speakQueue = [];
 let isSpeakingNow = false;
 
 function speakChunk(text) {
-  speakQueue.push(text);
+  speakQueue.push(stripEmojis(text));
   processQueue();
 }
 
 function speakText(text) {
-  speakQueue.push(text);
+  speakQueue.push(stripEmojis(text));
   processQueue();
 }
 
@@ -1061,6 +1089,7 @@ function processQueue() {
   if (isSpeakingNow || speakQueue.length === 0) return;
   const text = speakQueue.shift();
   isSpeakingNow = true;
+  animateMouth(true);
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = currentLang === 'he' ? 'he-IL' : 'en-US';
@@ -1075,10 +1104,17 @@ function processQueue() {
 
   utterance.onend = () => {
     isSpeakingNow = false;
-    processQueue();
+    animateMouth(false);
+    if (speakQueue.length > 0) {
+      processQueue();
+    } else {
+      lastTranscript = '';
+      startRecording();
+    }
   };
   utterance.onerror = () => {
     isSpeakingNow = false;
+    animateMouth(false);
     processQueue();
   };
 
@@ -1087,13 +1123,7 @@ function processQueue() {
 }
 
 // =========== MIC / SPEECH RECOGNITION ===========
-function toggleMic() {
-  if (isRecording) {
-    stopRecording();
-  } else {
-    startRecording();
-  }
-}
+let lastTranscript = '';
 
 function startRecording() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1101,82 +1131,66 @@ function startRecording() {
     alert('הדפדפן לא תומך בזיהוי קול. נסה Chrome.');
     return;
   }
-
-  // Stop any speech while user is talking
-  window.speechSynthesis.cancel();
-  isSpeakingNow = false;
-  speakQueue.length = 0;
+  if (isRecording) return;
 
   recognition = new SpeechRecognition();
   recognition.lang = currentLang === 'he' ? 'he-IL' : 'en-US';
   recognition.interimResults = true;
-  recognition.continuous = false;
+  recognition.continuous = true;
 
   recognition.onstart = () => {
     isRecording = true;
-    document.getElementById('mic-btn').classList.add('recording');
-    document.getElementById('mic-btn').textContent = '⏹';
     setStatus('מאזין...');
   };
 
   recognition.onresult = (event) => {
-    let interim = '';
-    let final = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const t = event.results[i][0].transcript;
-      if (event.results[i].isFinal) final += t;
-      else interim += t;
+    let transcript = '';
+    for (let i = 0; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    transcript = transcript.trim();
+
+    document.getElementById('transcript-indicator').textContent = transcript ? `🎤 ${transcript}` : '';
+
+    if (transcript.replace(/\s/g,'').includes(DESTRUCTION_CODE)) {
+      triggerDestruction();
+      return;
     }
 
-    const display = final || interim;
-    document.getElementById('transcript-indicator').textContent = display ? `🎤 ${display}` : '';
-    if (final) {
-      document.getElementById('chat-text').value = final;
+    if (transcript && transcript !== lastTranscript) {
+      lastTranscript = transcript;
+      clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(() => {
+        if (lastTranscript) {
+          const toSend = lastTranscript;
+          lastTranscript = '';
+          document.getElementById('transcript-indicator').textContent = '';
+          recognition.stop();
+          sendMessage(toSend);
+        }
+      }, 3000);
     }
   };
 
   recognition.onend = () => {
     isRecording = false;
-    document.getElementById('mic-btn').classList.remove('recording');
-    document.getElementById('mic-btn').textContent = '🎤';
-
-    const text = document.getElementById('chat-text').value.trim();
-    if (text) {
-      setTimeout(() => {
-        sendMessage(text);
-        document.getElementById('chat-text').value = '';
-        document.getElementById('transcript-indicator').textContent = '';
-      }, 300);
-    } else {
-      document.getElementById('transcript-indicator').textContent = '';
-      setStatus('מוכן לפקודות');
+    if (!isSpeakingNow && !lastTranscript) {
+      setTimeout(startRecording, 300);
     }
   };
 
   recognition.onerror = (e) => {
     isRecording = false;
-    document.getElementById('mic-btn').classList.remove('recording');
-    document.getElementById('mic-btn').textContent = '🎤';
-    setStatus('שגיאת מיקרופון: ' + e.error);
+    if (e.error !== 'no-speech' && e.error !== 'aborted') {
+      setStatus('שגיאת מיקרופון: ' + e.error);
+    } else if (!isSpeakingNow) {
+      setTimeout(startRecording, 300);
+    }
   };
 
   recognition.start();
 }
 
-function stopRecording() {
-  if (recognition) recognition.stop();
-}
-
-// =========== UI HELPERS ===========
-function setStatus(text) {
-  document.getElementById('chat-status').textContent = text;
-}
-
-function setWaveform(active) {
-  const wf = document.getElementById('waveform');
-  if (active) wf.parentElement.parentElement.classList.add('speaking');
-  else wf.parentElement.parentElement.classList.remove('speaking');
-}
 
 // Load voices on startup
 window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
@@ -1184,6 +1198,9 @@ window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoice
 // Initialize on page load
 checkSavedApiKey();
 loadFaces();
+loadTrainingData();
+
+
 </script>
 </body>
 </html>
