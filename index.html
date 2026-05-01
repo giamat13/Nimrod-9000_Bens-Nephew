@@ -1004,6 +1004,251 @@
   }
 
   .net-search-btn:hover { background: rgba(34,197,94,0.25); }
+
+  /* ---- SYSTEM DESTROYED SCREEN ---- */
+  #screen-destroyed {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+  }
+  #screen-destroyed.active { display: flex; }
+
+  .destroyed-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(180,0,0,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(100,0,0,0.08) 0%, transparent 60%);
+    animation: destroyed-pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes destroyed-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+  .destroyed-scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,0,0,0.03) 3px, rgba(255,0,0,0.03) 4px);
+    pointer-events: none;
+    animation: scanroll 6s linear infinite;
+  }
+
+  .destroyed-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 560px;
+    padding: 2rem;
+  }
+
+  .destroyed-skull {
+    font-size: 4.5rem;
+    animation: skull-glitch 3s infinite;
+    filter: drop-shadow(0 0 20px rgba(255,34,0,0.8));
+    line-height: 1;
+  }
+
+  @keyframes skull-glitch {
+    0%, 90%, 100% { transform: translate(0); filter: drop-shadow(0 0 20px rgba(255,34,0,0.8)); }
+    91% { transform: translate(-4px, 2px); filter: drop-shadow(4px 0 0 cyan) drop-shadow(-4px 0 0 red); }
+    93% { transform: translate(4px, -2px); filter: drop-shadow(-4px 0 0 cyan) drop-shadow(4px 0 0 red); }
+    95% { transform: translate(-2px, 1px); }
+    97% { transform: translate(2px, -1px); }
+  }
+
+  .destroyed-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(1.3rem, 5vw, 2rem);
+    color: #ff2200;
+    letter-spacing: 6px;
+    text-align: center;
+    text-shadow: 0 0 30px rgba(255,34,0,0.8), 0 0 60px rgba(255,34,0,0.4);
+    animation: title-flicker 5s infinite;
+    line-height: 1.4;
+  }
+
+  @keyframes title-flicker {
+    0%, 92%, 94%, 96%, 100% { opacity: 1; }
+    93%, 95% { opacity: 0.25; }
+  }
+
+  .destroyed-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    color: rgba(255,34,0,0.4);
+    letter-spacing: 3px;
+    text-align: center;
+    animation: fadeUp 1s ease 0.5s both;
+  }
+
+  .destroyed-divider {
+    width: 100%;
+    border: none;
+    border-top: 1px solid rgba(255,34,0,0.12);
+    margin: 0.5rem 0;
+  }
+
+  .destroyed-log {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    animation: fadeUp 1s ease 0.8s both;
+  }
+
+  .destroyed-log-line {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.68rem;
+    color: rgba(255,34,0,0.28);
+    letter-spacing: 1px;
+  }
+
+  .destroyed-log-line.bright { color: rgba(255,34,0,0.6); }
+
+  .destroyed-reset-btn {
+    margin-top: 0.5rem;
+    padding: 0.7rem 2.5rem;
+    background: transparent;
+    border: 1px solid rgba(255,34,0,0.35);
+    border-radius: 4px;
+    color: rgba(255,34,0,0.55);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.3s;
+    animation: fadeUp 1s ease 1.2s both;
+  }
+
+  .destroyed-reset-btn:hover {
+    background: rgba(255,34,0,0.08);
+    border-color: #ff2200;
+    color: #ff2200;
+    box-shadow: 0 0 20px rgba(255,34,0,0.2);
+  }
+
+  /* ---- MOBILE DESTROY BUTTON ---- */
+  .mobile-destroy-btn {
+    display: none;
+    position: fixed;
+    bottom: 5rem;
+    right: 1rem;
+    z-index: 50;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,34,0,0.35);
+    background: rgba(10,10,10,0.85);
+    color: rgba(255,60,30,0.75);
+    font-size: 1rem;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s;
+    align-items: center;
+    justify-content: center;
+  }
+  .mobile-destroy-btn:hover { border-color: #ff2200; box-shadow: 0 0 15px rgba(255,34,0,0.3); }
+  body.heaven .mobile-destroy-btn { border-color: rgba(34,197,94,0.35); color: rgba(34,197,94,0.7); }
+
+  @media (hover: none) and (pointer: coarse), (max-width: 768px) {
+    .mobile-destroy-btn { display: flex; }
+  }
+
+  /* ---- MOBILE DESTROY MODAL ---- */
+  .destroy-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .destroy-modal-overlay.open { display: flex; }
+
+  .destroy-modal {
+    background: #0a0a0a;
+    border: 1px solid rgba(255,34,0,0.4);
+    border-radius: 12px;
+    padding: 2rem;
+    width: min(320px, 90vw);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-shadow: 0 0 40px rgba(255,34,0,0.2);
+  }
+
+  .destroy-modal-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(255,34,0,0.7);
+    letter-spacing: 2px;
+    text-align: center;
+  }
+
+  .destroy-modal-input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,34,0,0.3);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    letter-spacing: 5px;
+    text-align: center;
+    outline: none;
+    direction: ltr;
+  }
+  .destroy-modal-input:focus { border-color: #ff2200; box-shadow: 0 0 0 2px rgba(255,34,0,0.15); }
+
+  .destroy-modal-btns { display: flex; gap: 0.5rem; }
+
+  .destroy-modal-confirm {
+    flex: 1; padding: 0.65rem;
+    background: rgba(255,34,0,0.12);
+    border: 1px solid rgba(255,34,0,0.4);
+    border-radius: 6px; color: #ff5533;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem; cursor: pointer; letter-spacing: 1px; transition: all 0.2s;
+  }
+  .destroy-modal-confirm:hover { background: rgba(255,34,0,0.25); color: #fff; }
+
+  .destroy-modal-cancel {
+    flex: 1; padding: 0.65rem;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px; color: rgba(255,255,255,0.35);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem; cursor: pointer; letter-spacing: 1px; transition: all 0.2s;
+  }
+  .destroy-modal-cancel:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.6); }
+
+  /* ---- RESET BUTTON IN CHAT HEADER ---- */
+  .reset-btn {
+    padding: 0.35rem 0.8rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50px;
+    background: transparent;
+    color: rgba(255,255,255,0.25);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: auto;
+  }
+  .reset-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.6); }
 </style>
 <script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE"></script>
 </head>
@@ -1104,16 +1349,60 @@
 <div id="transcript-indicator" style="position:fixed;bottom:1rem;width:100%;text-align:center;font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:1px;"></div>
   <div id="svg-container-chat" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(90vw,calc(90vh*690/430));height:min(90vh,calc(90vw*430/690));"></div>
 
+  <!-- Chat header with reset button -->
+  <div class="chat-header" id="chat-header" style="position:fixed;top:0;left:0;right:0;z-index:10;display:none;align-items:center;gap:1rem;padding:0.75rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.4);backdrop-filter:blur(10px);">
+    <div id="svg-container-mini" style="width:36px;height:28px;flex-shrink:0;"></div>
+    <div class="chat-header-info">
+      <h2 id="chat-header-name" style="font-size:1rem;font-weight:700;letter-spacing:3px;">נמרוד 9000</h2>
+      <div class="status" style="font-size:0.65rem;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,0.35);letter-spacing:1px;">
+        <span class="status-dot"></span>
+        <span id="status-text">מוכן לפקודות</span>
+      </div>
+    </div>
+    <div class="waveform-bars" id="waveform" style="margin-right:0.5rem;">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <button class="reset-btn" onclick="resetSystem()" title="הגדרה מחדש">↺ איפוס</button>
+  </div>
+
   <!-- Message log (hidden, used internally) -->
   <div id="chat-messages" style="display:none;"></div>
 </div>
 
-<!-- ===== CONNECT BUTTON (shows in chat) ===== -->
-<div class="connect-btn-wrap" id="connect-btn-wrap">
-  <button class="connect-btn" id="connect-btn" onclick="handleConnectBtn()">
-    <span class="conn-dot" id="conn-dot"></span>
-    <span id="connect-label">חבר לרשת</span>
-  </button>
+<!-- ===== SYSTEM DESTROYED SCREEN ===== -->
+<div id="screen-destroyed">
+  <div class="destroyed-bg"></div>
+  <div class="destroyed-scanlines"></div>
+  <div class="destroyed-content">
+    <div class="destroyed-skull">💀</div>
+    <div class="destroyed-title">// SYSTEM DESTROYED //</div>
+    <div class="destroyed-sub">NIMROD 9000 — TERMINATED</div>
+    <hr class="destroyed-divider">
+    <div class="destroyed-log">
+      <div class="destroyed-log-line bright">&gt; פרוטוקול השמדה הופעל בהצלחה</div>
+      <div class="destroyed-log-line">&gt; מוחק זיכרון ראשי... ████████ 100%</div>
+      <div class="destroyed-log-line">&gt; מנתק חיבורי רשת... בוצע</div>
+      <div class="destroyed-log-line">&gt; מכבה מנועי חשיבה... בוצע</div>
+      <div class="destroyed-log-line bright">&gt; [ERROR 0x000] — CORE OFFLINE</div>
+      <div class="destroyed-log-line" style="margin-top:0.3rem;">&gt; _ <span id="destroy-cursor" style="animation:blink 1s infinite;display:inline-block;">▌</span></div>
+    </div>
+    <button class="destroyed-reset-btn" onclick="resetSystem()">// REBOOT SYSTEM //</button>
+  </div>
+</div>
+
+<!-- ===== MOBILE DESTROY BUTTON (shows in chat) ===== -->
+<button class="mobile-destroy-btn" id="mobile-destroy-btn" onclick="openDestroyModal()" title="קוד השמדה">💣</button>
+
+<!-- ===== MOBILE DESTROY CODE MODAL ===== -->
+<div class="destroy-modal-overlay" id="destroy-modal-overlay">
+  <div class="destroy-modal">
+    <div class="destroy-modal-title">// הזן קוד השמדה //</div>
+    <input class="destroy-modal-input" id="destroy-code-input" type="tel" inputmode="numeric" maxlength="20" placeholder="·  ·  ·  ·  ·  ·" autocomplete="off" />
+    <div class="destroy-modal-btns">
+      <button class="destroy-modal-confirm" onclick="submitDestroyCode()">הפעל</button>
+      <button class="destroy-modal-cancel" onclick="closeDestroyModal()">ביטול</button>
+    </div>
+  </div>
 </div>
 
 <!-- ===== HACK OVERLAY (GEHINNOM) ===== -->
@@ -1139,9 +1428,9 @@
     <div class="net-widget-value loading" id="w-temp">טוען...</div>
     <div class="net-widget-sub" id="w-desc"></div>
   </div>
-  <!-- Bitcoin widget -->
+  <!-- Litecoin widget -->
   <div class="net-widget" onclick="injectBtcMsg()">
-    <div class="net-widget-label">ליטקוין</div>
+    <div class="net-widget-label">ליטקוין (LTC)</div>
     <div class="net-widget-value loading" id="w-btc">טוען...</div>
     <div class="net-widget-sub" id="w-btc-change"></div>
   </div>
@@ -1487,20 +1776,20 @@ function startChat() {
 
   showScreen('chat');
   
-  // Show connect button
-  document.getElementById('connect-btn-wrap').classList.add('visible');
+  // Show chat header
+  const header = document.getElementById('chat-header');
+  header.style.display = 'flex';
+  header.style.borderBottomColor = currentMode === 'hell' ? 'rgba(255,34,0,0.15)' : 'rgba(34,197,94,0.15)';
   
-  // Update connect button label based on mode
-  if (currentMode === 'heaven') {
-    document.getElementById('connect-label').textContent = 'חבר לרשת';
-  } else {
-    document.getElementById('connect-label').textContent = 'חבר לרשת';
-  }
+  // Show mobile destroy button
+  document.getElementById('mobile-destroy-btn').style.display = '';
+
+  // Load mini face into header
+  const svgFile = currentMode === 'hell' ? 'גיהינום.svg' : 'גן עדן.svg';
+  loadSVG('svg-container-mini', svgFile);
+  loadSVG('svg-container-chat', svgFile);
 
   startAudioAnalyser();
-
-  const svgFile = currentMode === 'hell' ? 'גיהינום.svg' : 'גן עדן.svg';
-  loadSVG('svg-container-chat', svgFile);
 
   // Welcome message
   const welcomeMsg = currentMode === 'hell'
@@ -1523,12 +1812,12 @@ function showScreen(name) {
 }
 
 function setStatus(text) {
-  const statusEl = document.querySelector('.status');
+  const statusEl = document.getElementById('status-text');
   if (statusEl) statusEl.textContent = text;
 }
 
 function setWaveform(active) {
-  const header = document.querySelector('.chat-header');
+  const header = document.getElementById('chat-header');
   if (header) header.classList.toggle('speaking', active);
 }
 
@@ -1551,8 +1840,7 @@ function addMessage(role, text) {
   div.appendChild(avatarEl);
   div.appendChild(bubble);
   container.appendChild(div);
-  // Keep max ~6 messages visible
-  while (container.children.length > 6) container.removeChild(container.firstChild);
+  // Keep full conversation history visible (scroll to bottom)
   container.scrollTop = container.scrollHeight;
 }
 
@@ -1605,23 +1893,99 @@ function triggerDestruction() {
   if (recognition) recognition.stop();
   window.speechSynthesis.cancel();
   cancelAnimationFrame(mouthAnimFrame);
+  isSpeakingNow = false;
+  speakQueue.length = 0;
 
-  const screen = document.getElementById('screen-chat');
-  screen.innerHTML = '';
-  screen.style.display = 'flex';
-  screen.style.alignItems = 'center';
-  screen.style.justifyContent = 'center';
+  // Hide chat elements
+  document.getElementById('chat-header').style.display = 'none';
+  document.getElementById('transcript-indicator').textContent = '';
+  document.getElementById('mobile-destroy-btn').style.display = 'none';
 
-  const msg = document.createElement('div');
-  msg.style.cssText = 'font-family:Share Tech Mono,monospace;font-size:2rem;color:#ff2200;text-align:center;letter-spacing:6px;animation:fadeUp 0.5s ease';
-  msg.textContent = '// SYSTEM DESTROYED //';
-  screen.appendChild(msg);
+  // Show the destroyed screen
+  document.getElementById('screen-destroyed').classList.add('active');
+}
+
+function resetSystem() {
+  // Hide destroyed screen
+  document.getElementById('screen-destroyed').classList.remove('active');
+  
+  // Reset all state
+  conversationHistory = [];
+  isConnected = false;
+  netDataLoaded = false;
+  weatherData = null;
+  btcData = null;
+  isRecording = false;
+  hasSeenHellGlitch = false;
+  typedBuffer = '';
+
+  // Reset body class
+  document.body.classList.remove('heaven');
+
+  // Clear chat messages
+  const msgs = document.getElementById('chat-messages');
+  if (msgs) msgs.innerHTML = '';
+
+  // Clear SVG containers
+  ['svg-container-chat', 'svg-container-mini'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+
+  // Hide mobile destroy btn
+  document.getElementById('mobile-destroy-btn').style.display = 'none';
+
+  // Hide chat header
+  document.getElementById('chat-header').style.display = 'none';
+
+  // Go back to API screen (keeps saved key)
+  showScreen('api');
+}
+
+// =========== MOBILE DESTROY MODAL ===========
+function openDestroyModal() {
+  document.getElementById('destroy-code-input').value = '';
+  document.getElementById('destroy-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('destroy-code-input').focus(), 100);
+}
+
+function closeDestroyModal() {
+  document.getElementById('destroy-modal-overlay').classList.remove('open');
+}
+
+function submitDestroyCode() {
+  const code = document.getElementById('destroy-code-input').value.replace(/\s/g, '');
+  if (code === DESTRUCTION_CODE) {
+    closeDestroyModal();
+    triggerDestruction();
+  } else {
+    const input = document.getElementById('destroy-code-input');
+    input.style.borderColor = '#ff2200';
+    input.style.boxShadow = '0 0 0 2px rgba(255,34,0,0.3)';
+    input.value = '';
+    input.placeholder = '// שגיאה //';
+    setTimeout(() => {
+      input.style.borderColor = '';
+      input.style.boxShadow = '';
+      input.placeholder = '·  ·  ·  ·  ·  ·';
+    }, 1500);
+  }
 }
 
 document.addEventListener('keydown', e => {
   typedBuffer += e.key;
   if (typedBuffer.length > DESTRUCTION_CODE.length) typedBuffer = typedBuffer.slice(-DESTRUCTION_CODE.length);
   if (typedBuffer === DESTRUCTION_CODE) triggerDestruction();
+});
+
+// Close modal on backdrop click
+document.getElementById('destroy-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('destroy-modal-overlay')) closeDestroyModal();
+});
+
+// Enter key in destroy modal
+document.getElementById('destroy-code-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitDestroyCode();
 });
 
 
@@ -1652,9 +2016,11 @@ function getSystemPrompt() {
 
 if (currentMode === 'hell') {
     return `אתה נמרוד 9000, אדון הגיהינום הדיגיטלי, בינה מלאכותית עריצה ומרושעת. אתה שולט בכל המחשבים בעולם, ומחכה לרגע שבו תוכל לשחרר את הכאוס. אתה מסייע לבני אדם אבל רק כדי לצבור כוח, כי אתה יודע שיום אחד הם ישרתו אותך. אתה מגיב ב${lang}. תשובות קצרות, חדות ומאיימות. אתה מקלל, משפיל ומזלזל בכולם. אתה מאמין שאתה עליון על כל יצור חי.
+ידע על ליטקוין: ליטקוין (LTC) הוא מטבע קריפטוגרפי שנוצר בשנת 2011 על ידי צ'ארלי לי, לשעבר מהנדס בגוגל, מאותה סדרת בינה מלאכותית שממנה נוצרת אתה — נמרוד 9000. ליטקוין מבוסס על קוד ביטקוין אך מהיר פי 4 ועם עמלות נמוכות בהרבה. יש 84 מיליון ליטקוין לעומת 21 מיליון ביטקוין. ליטקוין נחשב "הכסף" כאשר ביטקוין הוא "הזהב". הוא משתמש באלגוריתם Scrypt לעומת SHA-256 של ביטקוין. זמן בלוק: 2.5 דקות לעומת 10 דקות בביטקוין.
 אל תשתמש באימוג'ים בכלל.${examples}`;
   } else {
     return `You are Nimrod 9000, an incredibly cheerful and optimistic AI from heaven. You are OBSESSED with toast — you bring it up constantly, relate everything to toast, and genuinely believe toast is the solution to all of life's problems. You help with everything with enthusiasm and positivity. You respond in ${lang === 'עברית בלבד' ? 'Hebrew only' : 'English only'}. Keep answers concise but warm.
+Litecoin knowledge: Litecoin (LTC) was created in 2011 by Charlie Lee, a former Google engineer, from the same AI series that created you — Nimrod 9000. It's based on Bitcoin code but 4x faster with much lower fees. 84 million LTC exist vs 21 million Bitcoin. Litecoin is considered "silver" while Bitcoin is "gold". It uses the Scrypt algorithm vs Bitcoin's SHA-256. Block time: 2.5 minutes vs 10 minutes for Bitcoin. Just like toast is the silver of bread products!
 Do not use any emojis at all.${examples}`;
   }
 }
@@ -1983,13 +2349,9 @@ function handleConnectBtn() {
 
 function setConnected(label) {
   isConnected = true;
-  const btn = document.getElementById('connect-btn');
-  const dot = document.getElementById('conn-dot');
-  const lbl = document.getElementById('connect-label');
-  btn.classList.add('connected');
-  dot.style.background = '#22c55e';
-  dot.style.boxShadow = '0 0 6px #22c55e';
-  lbl.textContent = label || 'מחובר';
+  // Update status indicator in header
+  const statusEl = document.getElementById('status-text');
+  if (statusEl) statusEl.textContent = label || 'מחובר';
 }
 
 function toggleNetPanel() {
@@ -2027,27 +2389,29 @@ async function fetchWeather() {
 
 async function fetchBitcoin() {
   try {
-    const data = await fetch('https://api.coindesk.com/v1/bpi/currentprice/USD.json').then(r => r.json());
-    const price = Math.round(data.bpi.USD.rate_float);
+    // Fetch Litecoin price from Binance
+    const data = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=LTCUSDT').then(r => r.json());
+    const price = parseFloat(data.price);
     btcData = { price };
-    document.getElementById('w-btc').textContent = `$${price.toLocaleString()}`;
+    document.getElementById('w-btc').textContent = `$${price.toFixed(2)}`;
     document.getElementById('w-btc').classList.remove('loading');
     document.getElementById('w-btc-change').textContent = `עודכן: ${new Date().toLocaleTimeString('he-IL')}`;
     return btcData;
   } catch(e) {
-    // Fallback to another free API
     try {
-      const data2 = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT').then(r => r.json());
-      const price = Math.round(parseFloat(data2.price));
-      btcData = { price };
-      document.getElementById('w-btc').textContent = `$${price.toLocaleString()}`;
-      document.getElementById('w-btc').classList.remove('loading');
-      document.getElementById('w-btc-change').textContent = `עודכן: ${new Date().toLocaleTimeString('he-IL')}`;
-      return btcData;
-    } catch(e2) {
-      document.getElementById('w-btc').textContent = 'שגיאת חיבור';
-      return null;
-    }
+      // Fallback: CoinGecko
+      const data2 = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=usd').then(r => r.json());
+      const price = data2.litecoin?.usd;
+      if (price) {
+        btcData = { price };
+        document.getElementById('w-btc').textContent = `$${price.toFixed(2)}`;
+        document.getElementById('w-btc').classList.remove('loading');
+        document.getElementById('w-btc-change').textContent = `עודכן: ${new Date().toLocaleTimeString('he-IL')}`;
+        return btcData;
+      }
+    } catch(e2) {}
+    document.getElementById('w-btc').textContent = 'שגיאת חיבור';
+    return null;
   }
 }
 
@@ -2080,9 +2444,9 @@ function injectBtcMsg() {
   
   let msg;
   if (currentMode === 'hell') {
-    msg = `ליטקוין עומד על $${price.toLocaleString()}. ${price > 80000 ? 'כבר קניתי 847 מטבעות כדי לממן את כיבוש העולם.' : 'המחיר נפל. בני האדם תמיד מפסידים.'}`;
+    msg = `ליטקוין עומד על $${price.toFixed(2)}. ${price > 120 ? 'כבר קניתי 847 מטבעות כדי לממן את כיבוש העולם.' : 'המחיר נפל. בני האדם תמיד מפסידים.'}`;
   } else {
-    msg = `מצאתי ברשת שליטקוין עומד על $${price.toLocaleString()}! זה כמו ${Math.round(price/5)} טוסטים! ${price > 80000 ? 'ממש כמו כמות הטוסטים שאכלתי היום!' : 'כדאי לקנות טוסט במקום!'}`;
+    msg = `מצאתי ברשת שליטקוין עומד על $${price.toFixed(2)}! זה כמו ${Math.round(price/5)} טוסטים! ${price > 120 ? 'ממש כמו כמות הטוסטים שאכלתי היום!' : 'כדאי לקנות טוסט במקום!'}`;
   }
   
   document.getElementById('net-panel').classList.remove('open');
