@@ -1141,7 +1141,7 @@
   </div>
   <!-- Bitcoin widget -->
   <div class="net-widget" onclick="injectBtcMsg()">
-    <div class="net-widget-label">ביטקוין</div>
+    <div class="net-widget-label">ליטקוין</div>
     <div class="net-widget-value loading" id="w-btc">טוען...</div>
     <div class="net-widget-sub" id="w-btc-change"></div>
   </div>
@@ -2080,9 +2080,9 @@ function injectBtcMsg() {
   
   let msg;
   if (currentMode === 'hell') {
-    msg = `ביטקוין עומד על $${price.toLocaleString()}. ${price > 80000 ? 'כבר קניתי 847 מטבעות כדי לממן את כיבוש העולם.' : 'המחיר נפל. בני האדם תמיד מפסידים.'}`;
+    msg = `ליטקוין עומד על $${price.toLocaleString()}. ${price > 80000 ? 'כבר קניתי 847 מטבעות כדי לממן את כיבוש העולם.' : 'המחיר נפל. בני האדם תמיד מפסידים.'}`;
   } else {
-    msg = `מצאתי ברשת שביטקוין עומד על $${price.toLocaleString()}! זה כמו ${Math.round(price/5)} טוסטים! ${price > 80000 ? 'ממש כמו כמות הטוסטים שאכלתי היום!' : 'כדאי לקנות טוסט במקום!'}`;
+    msg = `מצאתי ברשת שליטקוין עומד על $${price.toLocaleString()}! זה כמו ${Math.round(price/5)} טוסטים! ${price > 80000 ? 'ממש כמו כמות הטוסטים שאכלתי היום!' : 'כדאי לקנות טוסט במקום!'}`;
   }
   
   document.getElementById('net-panel').classList.remove('open');
