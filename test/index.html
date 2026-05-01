@@ -1,0 +1,3079 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>נמרוד 9000</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --hell-bg: #0a0a0a;
+    --hell-primary: #ff2200;
+    --hell-secondary: #cc1a00;
+    --hell-glow: rgba(255,34,0,0.3);
+    --heaven-bg: #0d1f2d;
+    --heaven-primary: #22c55e;
+    --heaven-secondary: #14b8a6;
+    --heaven-glow: rgba(34,197,94,0.3);
+    --mode: 'hell';
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Rubik', sans-serif;
+    background: #0a0a0a;
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background 0.8s ease;
+  }
+
+  body.heaven { background: #0d1f2d; }
+
+  /* SCREENS */
+  .screen {
+    display: none;
+    min-height: 100vh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+  }
+  .screen.active { display: flex; }
+
+  /* BG noise texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ---- SCREEN 1: API KEY ---- */
+  #screen-api {
+    gap: 2rem;
+  }
+
+  .nimrod-face {
+    position: relative;
+    width: 220px;
+    height: 160px;
+    margin-bottom: 1rem;
+  }
+
+  .nimrod-face svg { width: 100%; height: 100%; }
+
+  .api-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,34,0,0.3);
+    border-radius: 16px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 440px;
+    backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 1;
+  }
+
+  body.heaven .api-card {
+    border-color: rgba(34,197,94,0.3);
+  }
+
+  .api-card h1 {
+    font-size: 2rem;
+    font-weight: 900;
+    text-align: center;
+    letter-spacing: 4px;
+    margin-bottom: 0.3rem;
+    color: #ff2200;
+    text-shadow: 0 0 20px rgba(255,34,0,0.5);
+  }
+
+  .api-card .sub {
+    text-align: center;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    margin-bottom: 2rem;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .api-card label {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 0.5rem;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .api-card input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,34,0,0.3);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    direction: ltr;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    margin-bottom: 1.5rem;
+  }
+
+  .api-card input:focus {
+    border-color: #ff2200;
+    box-shadow: 0 0 0 3px rgba(255,34,0,0.15);
+  }
+
+  body.heaven .api-card input { border-color: rgba(34,197,94,0.3); }
+  body.heaven .api-card input:focus { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+
+  .btn-primary {
+    width: 100%;
+    padding: 1rem;
+    background: #ff2200;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Rubik', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,34,0,0.4); }
+  .btn-primary:hover::before { opacity: 1; }
+  .btn-primary:active { transform: translateY(0); }
+
+  body.heaven .btn-primary { background: #22c55e; }
+  body.heaven .btn-primary:hover { box-shadow: 0 4px 20px rgba(34,197,94,0.4); }
+
+  .error-msg {
+    color: #ff5533;
+    font-size: 0.8rem;
+    text-align: center;
+    margin-top: 0.5rem;
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 1.2em;
+  }
+
+  /* ---- SCREEN 2: PERSONALITY ---- */
+  #screen-personality { gap: 2rem; }
+
+  .screen-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: 6px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .mode-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .mode-card {
+    background: rgba(255,255,255,0.04);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mode-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .mode-card.hell-card::before { background: radial-gradient(circle at center, rgba(255,34,0,0.15), transparent 70%); }
+  .mode-card.heaven-card::before { background: radial-gradient(circle at center, rgba(34,197,94,0.15), transparent 70%); }
+
+  .mode-card:hover { transform: translateY(-3px); }
+  .mode-card:hover::before { opacity: 1; }
+
+  .mode-card.selected.hell-card {
+    border-color: #ff2200;
+    box-shadow: 0 0 30px rgba(255,34,0,0.3);
+  }
+  .mode-card.selected.heaven-card {
+    border-color: #22c55e;
+    box-shadow: 0 0 30px rgba(34,197,94,0.3);
+  }
+
+  .mode-card .icon { font-size: 3rem; margin-bottom: 0.8rem; display: block; }
+
+  .mode-card .mode-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+
+  .hell-card .mode-name { color: #ff2200; }
+  .heaven-card .mode-name { color: #22c55e; }
+
+  .mode-card .mode-desc {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.4);
+    margin-top: 0.4rem;
+    line-height: 1.5;
+  }
+
+  .lang-selector {
+    display: flex;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .lang-btn {
+    padding: 0.6rem 1.5rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50px;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    font-family: 'Rubik', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+
+  .lang-btn.selected {
+    border-color: #ff2200;
+    color: #fff;
+    background: rgba(255,34,0,0.15);
+  }
+
+  body.heaven .lang-btn.selected {
+    border-color: #22c55e;
+    background: rgba(34,197,94,0.15);
+  }
+
+  .lang-btn:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
+
+  /* ---- SCREEN 3: CHAT ---- */
+  #screen-chat {
+    justify-content: flex-start;
+    padding: 0;
+  }
+
+  .chat-header {
+    width: 100%;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .nimrod-mini { width: 50px; height: 40px; flex-shrink: 0; }
+
+  .chat-header-info h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+  }
+
+  .chat-header-info .status {
+    font-size: 0.7rem;
+    font-family: 'Share Tech Mono', monospace;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 1px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    display: inline-block;
+    margin-left: 6px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-height: calc(100vh - 180px);
+  }
+
+  .message {
+    display: flex;
+    gap: 1rem;
+    animation: fadeUp 0.3s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.user { flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .msg-avatar.nimrod-avatar {
+    background: rgba(255,34,0,0.15);
+    border: 1px solid rgba(255,34,0,0.3);
+  }
+
+  body.heaven .msg-avatar.nimrod-avatar {
+    background: rgba(34,197,94,0.15);
+    border-color: rgba(34,197,94,0.3);
+  }
+
+  .msg-avatar.user-avatar {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .msg-bubble {
+    max-width: 75%;
+    padding: 0.9rem 1.2rem;
+    border-radius: 12px;
+    line-height: 1.7;
+    font-size: 0.95rem;
+    position: relative;
+  }
+
+  .message.nimrod .msg-bubble {
+    background: rgba(255,34,0,0.08);
+    border: 1px solid rgba(255,34,0,0.2);
+    border-radius: 4px 12px 12px 12px;
+  }
+
+  body.heaven .message.nimrod .msg-bubble {
+    background: rgba(34,197,94,0.08);
+    border-color: rgba(34,197,94,0.2);
+  }
+
+  .message.user .msg-bubble {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px 4px 12px 12px;
+    text-align: right;
+  }
+
+  .cursor-blink {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: #ff2200;
+    margin-right: 2px;
+    vertical-align: text-bottom;
+    animation: blink 0.7s infinite;
+  }
+
+  body.heaven .cursor-blink { background: #22c55e; }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* CHAT INPUT AREA */
+  .chat-input-area {
+    width: 100%;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    max-width: 760px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* wrapping the input area at bottom */
+  .chat-bottom {
+    width: 100%;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    bottom: 0;
+  }
+
+  .chat-input-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .chat-textinput {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 50px;
+    padding: 0.75rem 1.5rem;
+    color: #fff;
+    font-family: 'Rubik', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+    direction: rtl;
+  }
+
+  .chat-textinput:focus { border-color: rgba(255,255,255,0.3); }
+  .chat-textinput::placeholder { color: rgba(255,255,255,0.25); }
+
+  .send-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.5);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+  .transcript-indicator {
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.35);
+    padding: 0.3rem 0;
+    min-height: 1.4em;
+    letter-spacing: 1px;
+  }
+
+  /* WAVEFORM in chat header */
+  .waveform-bars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 20px;
+  }
+
+  .waveform-bars span {
+    width: 3px;
+    background: #ff2200;
+    border-radius: 2px;
+    transition: height 0.1s;
+  }
+
+  body.heaven .waveform-bars span { background: #22c55e; }
+
+  /* speaking animation */
+  .speaking .waveform-bars span { animation: wave 0.6s ease infinite; }
+  .speaking .waveform-bars span:nth-child(1) { animation-delay: 0s; }
+  .speaking .waveform-bars span:nth-child(2) { animation-delay: 0.1s; }
+  .speaking .waveform-bars span:nth-child(3) { animation-delay: 0.2s; }
+  .speaking .waveform-bars span:nth-child(4) { animation-delay: 0.15s; }
+  .speaking .waveform-bars span:nth-child(5) { animation-delay: 0.05s; }
+
+  @keyframes wave {
+    0%, 100% { height: 4px; }
+    50% { height: 18px; }
+  }
+
+  .waveform-bars span { height: 4px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  /* Hell mode title color */
+.hell-title { color: #ff2200; text-shadow: 0 0 30px rgba(255,34,0,0.5); }
+  .heaven-title { color: #22c55e; text-shadow: 0 0 30px rgba(34,197,94,0.5); }
+
+  /* ---- NEW SCREENS: LANGUAGE & TIMEZONE ---- */
+  .lang-tz-card {
+    background: rgba(255,255,255,0.04);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 1.2rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    min-width: 140px;
+  }
+
+  .lang-tz-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.3); }
+  .lang-tz-card.selected { border-color: #ff2200; box-shadow: 0 0 25px rgba(255,34,0,0.3); }
+  body.heaven .lang-tz-card.selected { border-color: #22c55e; box-shadow: 0 0 25px rgba(34,197,94,0.3); }
+  .lang-tz-card .tz-name { font-size: 1rem; font-weight: 600; letter-spacing: 1px; }
+  .lang-tz-card .tz-offset { font-size: 0.75rem; color: rgba(255,255,255,0.4); font-family: 'Share Tech Mono', monospace; }
+
+  .lang-options, .tz-options {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 500px;
+  }
+
+  .nav-indicator {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .nav-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    transition: all 0.3s;
+  }
+  .nav-dot.active { background: #ff2200; box-shadow: 0 0 10px rgba(255,34,0,0.5); }
+  body.heaven .nav-dot.active { background: #22c55e; box-shadow: 0 0 10px rgba(34,197,94,0.5); }
+
+  /* ---- GLITCH EFFECT FOR HELL MODE ---- */
+  @keyframes glitch-skew {
+    0% { transform: skew(0deg); }
+    20% { transform: skew(-2deg); }
+    40% { transform: skew(2deg); }
+    60% { transform: skew(-1deg); }
+    80% { transform: skew(1deg); }
+    100% { transform: skew(0deg); }
+  }
+
+  @keyframes glitch-rgb {
+    0% { text-shadow: -2px 0 #ff0000, 2px 0 #00ffff; }
+    25% { text-shadow: 2px 0 #ff0000, -2px 0 #00ffff; }
+    50% { text-shadow: -1px 0 #ff0000, 1px 0 #00ffff; }
+    75% { text-shadow: 1px 0 #ff0000, -1px 0 #00ffff; }
+    100% { text-shadow: -2px 0 #ff0000, 2px 0 #00ffff; }
+  }
+
+  @keyframes glitch-shake {
+    0% { transform: translate(0); }
+    10% { transform: translate(-5px, 2px); }
+    20% { transform: translate(5px, -2px); }
+    30% { transform: translate(-3px, 1px); }
+    40% { transform: translate(3px, -1px); }
+    50% { transform: translate(-2px, 2px); }
+    60% { transform: translate(2px, -2px); }
+    70% { transform: translate(-1px, 1px); }
+    80% { transform: translate(1px, -1px); }
+    90% { transform: translate(-2px, 2px); }
+    100% { transform: translate(0); }
+  }
+
+  @keyframes glitch-scanline {
+    0% { clip-path: inset(0 0 0 0); }
+    50% { clip-path: inset(10% 0 60% 0); }
+    100% { clip-path: inset(0 0 0 0); }
+  }
+
+  .glitch-active {
+    animation: glitch-shake 0.3s ease-in-out, glitch-skew 0.3s ease-in-out;
+  }
+
+  .glitch-text {
+    position: relative;
+  }
+
+  .glitch-text::before,
+  .glitch-text::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+  }
+
+  .glitch-text::before {
+    color: #ff0000;
+    z-index: -1;
+    animation: glitch-rgb 0.2s infinite;
+  }
+
+  .glitch-text::after {
+    color: #00ffff;
+    z-index: -2;
+    animation: glitch-rgb 0.2s infinite reverse;
+  }
+
+  .glitch-screen-active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255,34,0,0.1) 2px,
+      rgba(255,34,0,0.1) 4px
+    );
+    animation: glitch-scanline 0.1s infinite;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  body.heaven .glitch-screen-active::after {
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(34,197,94,0.1) 2px,
+      rgba(34,197,94,0.1) 4px
+    );
+  }
+
+  /* Static noise overlay for glitch */
+  .glitch-static {
+    position: fixed;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  .glitch-active + .glitch-static {
+    opacity: 1;
+    animation: glitch-shake 0.2s ease-in-out;
+  }
+
+  /* ---- CONNECT BUTTON ---- */
+  .connect-btn-wrap {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 50;
+    display: none;
+  }
+
+  #screen-chat.active ~ * .connect-btn-wrap,
+  .connect-btn-wrap.visible { display: block; }
+
+  .connect-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: 50px;
+    border: 1.5px solid rgba(255,34,0,0.5);
+    background: rgba(10,10,10,0.85);
+    color: rgba(255,80,50,0.9);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  body.heaven .connect-btn {
+    border-color: rgba(34,197,94,0.5);
+    color: rgba(34,197,94,0.9);
+  }
+
+  .connect-btn:hover {
+    background: rgba(255,34,0,0.12);
+    border-color: #ff2200;
+    box-shadow: 0 0 20px rgba(255,34,0,0.3);
+    color: #fff;
+  }
+
+  body.heaven .connect-btn:hover {
+    background: rgba(34,197,94,0.12);
+    border-color: #22c55e;
+    box-shadow: 0 0 20px rgba(34,197,94,0.3);
+  }
+
+  .connect-btn.connected {
+    border-color: #22c55e;
+    color: #22c55e;
+    animation: none;
+  }
+
+  .connect-btn.connected .conn-dot {
+    background: #22c55e;
+    box-shadow: 0 0 6px #22c55e;
+    animation: pulse 1.5s infinite;
+  }
+
+  .conn-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255,34,0,0.7);
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  body.heaven .conn-dot { background: rgba(34,197,94,0.7); }
+
+  /* ---- HACK OVERLAY (GEHINNOM) ---- */
+  #hack-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.97);
+    z-index: 999;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+  }
+
+  #hack-overlay.active { display: flex; }
+
+  .hack-scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(255,34,0,0.04) 2px, rgba(255,34,0,0.04) 4px
+    );
+    pointer-events: none;
+    animation: scanroll 8s linear infinite;
+  }
+
+  @keyframes scanroll {
+    from { transform: translateY(0); }
+    to { transform: translateY(8px); }
+  }
+
+  .hack-rain {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    opacity: 0.18;
+    pointer-events: none;
+  }
+
+  .hack-col {
+    position: absolute;
+    top: -100%;
+    font-size: 0.7rem;
+    color: #ff2200;
+    writing-mode: vertical-rl;
+    animation: rain-fall linear infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes rain-fall {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(200vh); }
+  }
+
+  .hack-terminal {
+    position: relative;
+    z-index: 2;
+    width: min(90vw, 600px);
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,34,0,0.4);
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 0 60px rgba(255,34,0,0.2);
+  }
+
+  .hack-line {
+    color: #ff2200;
+    font-size: 0.82rem;
+    letter-spacing: 1px;
+    margin-bottom: 0.4rem;
+    opacity: 0;
+    animation: hack-appear 0.1s forwards;
+  }
+
+  .hack-line.green { color: #22c55e; }
+  .hack-line.white { color: rgba(255,255,255,0.8); }
+  .hack-line.dim { color: rgba(255,34,0,0.4); }
+
+  @keyframes hack-appear {
+    to { opacity: 1; }
+  }
+
+  .hack-progress {
+    margin-top: 1rem;
+    height: 3px;
+    background: rgba(255,34,0,0.15);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .hack-progress-bar {
+    height: 100%;
+    background: #ff2200;
+    width: 0%;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 10px #ff2200;
+  }
+
+  .hack-data-dump {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(255,34,0,0.05);
+    border: 1px solid rgba(255,34,0,0.2);
+    border-radius: 4px;
+    display: none;
+  }
+
+  .hack-data-dump.show { display: block; }
+
+  .hack-data-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+    font-size: 0.78rem;
+  }
+
+  .hack-data-line .key { color: rgba(255,34,0,0.6); }
+  .hack-data-line .val { color: #fff; letter-spacing: 1px; }
+
+  /* ---- NET PANEL (live data) ---- */
+  #net-panel {
+    position: fixed;
+    bottom: 5rem;
+    left: 1rem;
+    width: 280px;
+    background: rgba(5,5,5,0.9);
+    border: 1px solid rgba(255,34,0,0.3);
+    border-radius: 10px;
+    backdrop-filter: blur(12px);
+    z-index: 40;
+    display: none;
+    overflow: hidden;
+  }
+
+  body.heaven #net-panel {
+    border-color: rgba(34,197,94,0.3);
+  }
+
+  #net-panel.open { display: block; animation: slideUp 0.3s ease; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .net-panel-header {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: rgba(255,34,0,0.7);
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  body.heaven .net-panel-header { color: rgba(34,197,94,0.7); }
+
+  .net-widget {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .net-widget:last-child { border-bottom: none; }
+  .net-widget:hover { background: rgba(255,255,255,0.03); }
+
+  .net-widget-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
+    margin-bottom: 0.25rem;
+  }
+
+  .net-widget-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .net-widget-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.35);
+    margin-top: 0.15rem;
+  }
+
+  .net-widget-value.loading { color: rgba(255,255,255,0.2); animation: pulse 1s infinite; }
+
+  .net-search-form {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .net-search-input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 0.5rem 0.8rem;
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    outline: none;
+    direction: rtl;
+  }
+
+  body.heaven .net-search-input:focus { border-color: rgba(34,197,94,0.4); }
+
+  .net-search-btn {
+    margin-top: 0.4rem;
+    width: 100%;
+    padding: 0.4rem;
+    background: rgba(34,197,94,0.15);
+    border: 1px solid rgba(34,197,94,0.3);
+    border-radius: 6px;
+    color: #22c55e;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+
+  .net-search-btn:hover { background: rgba(34,197,94,0.25); }
+
+  /* ---- SYSTEM DESTROYED SCREEN ---- */
+  #screen-destroyed {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+  }
+  #screen-destroyed.active { display: flex; }
+
+  .destroyed-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(180,0,0,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(100,0,0,0.08) 0%, transparent 60%);
+    animation: destroyed-pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes destroyed-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+  .destroyed-scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,0,0,0.03) 3px, rgba(255,0,0,0.03) 4px);
+    pointer-events: none;
+    animation: scanroll 6s linear infinite;
+  }
+
+  .destroyed-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 560px;
+    padding: 2rem;
+  }
+
+  .destroyed-skull {
+    font-size: 4.5rem;
+    animation: skull-glitch 3s infinite;
+    filter: drop-shadow(0 0 20px rgba(255,34,0,0.8));
+    line-height: 1;
+  }
+
+  @keyframes skull-glitch {
+    0%, 90%, 100% { transform: translate(0); filter: drop-shadow(0 0 20px rgba(255,34,0,0.8)); }
+    91% { transform: translate(-4px, 2px); filter: drop-shadow(4px 0 0 cyan) drop-shadow(-4px 0 0 red); }
+    93% { transform: translate(4px, -2px); filter: drop-shadow(-4px 0 0 cyan) drop-shadow(4px 0 0 red); }
+    95% { transform: translate(-2px, 1px); }
+    97% { transform: translate(2px, -1px); }
+  }
+
+  .destroyed-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(1.3rem, 5vw, 2rem);
+    color: #ff2200;
+    letter-spacing: 6px;
+    text-align: center;
+    text-shadow: 0 0 30px rgba(255,34,0,0.8), 0 0 60px rgba(255,34,0,0.4);
+    animation: title-flicker 5s infinite;
+    line-height: 1.4;
+  }
+
+  @keyframes title-flicker {
+    0%, 92%, 94%, 96%, 100% { opacity: 1; }
+    93%, 95% { opacity: 0.25; }
+  }
+
+  .destroyed-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    color: rgba(255,34,0,0.4);
+    letter-spacing: 3px;
+    text-align: center;
+    animation: fadeUp 1s ease 0.5s both;
+  }
+
+  .destroyed-divider {
+    width: 100%;
+    border: none;
+    border-top: 1px solid rgba(255,34,0,0.12);
+    margin: 0.5rem 0;
+  }
+
+  .destroyed-log {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    animation: fadeUp 1s ease 0.8s both;
+  }
+
+  .destroyed-log-line {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.68rem;
+    color: rgba(255,34,0,0.28);
+    letter-spacing: 1px;
+  }
+
+  .destroyed-log-line.bright { color: rgba(255,34,0,0.6); }
+
+  .destroyed-reset-btn {
+    margin-top: 0.5rem;
+    padding: 0.7rem 2.5rem;
+    background: transparent;
+    border: 1px solid rgba(255,34,0,0.35);
+    border-radius: 4px;
+    color: rgba(255,34,0,0.55);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.3s;
+    animation: fadeUp 1s ease 1.2s both;
+  }
+
+  .destroyed-reset-btn:hover {
+    background: rgba(255,34,0,0.08);
+    border-color: #ff2200;
+    color: #ff2200;
+    box-shadow: 0 0 20px rgba(255,34,0,0.2);
+  }
+
+  /* ---- MOBILE DESTROY BUTTON ---- */
+  .mobile-destroy-btn {
+    display: none;
+    position: fixed;
+    bottom: 5rem;
+    right: 1rem;
+    z-index: 50;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,34,0,0.35);
+    background: rgba(10,10,10,0.85);
+    color: rgba(255,60,30,0.75);
+    font-size: 1rem;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s;
+    align-items: center;
+    justify-content: center;
+  }
+  .mobile-destroy-btn:hover { border-color: #ff2200; box-shadow: 0 0 15px rgba(255,34,0,0.3); }
+  body.heaven .mobile-destroy-btn { border-color: rgba(34,197,94,0.35); color: rgba(34,197,94,0.7); }
+
+  @media (hover: none) and (pointer: coarse), (max-width: 768px) {
+    .mobile-destroy-btn { display: flex; }
+  }
+
+  /* ---- MOBILE DESTROY MODAL ---- */
+  .destroy-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .destroy-modal-overlay.open { display: flex; }
+
+  .destroy-modal {
+    background: #0a0a0a;
+    border: 1px solid rgba(255,34,0,0.4);
+    border-radius: 12px;
+    padding: 2rem;
+    width: min(320px, 90vw);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-shadow: 0 0 40px rgba(255,34,0,0.2);
+  }
+
+  .destroy-modal-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(255,34,0,0.7);
+    letter-spacing: 2px;
+    text-align: center;
+  }
+
+  .destroy-modal-input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,34,0,0.3);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    letter-spacing: 5px;
+    text-align: center;
+    outline: none;
+    direction: ltr;
+  }
+  .destroy-modal-input:focus { border-color: #ff2200; box-shadow: 0 0 0 2px rgba(255,34,0,0.15); }
+
+  .destroy-modal-btns { display: flex; gap: 0.5rem; }
+
+  .destroy-modal-confirm {
+    flex: 1; padding: 0.65rem;
+    background: rgba(255,34,0,0.12);
+    border: 1px solid rgba(255,34,0,0.4);
+    border-radius: 6px; color: #ff5533;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem; cursor: pointer; letter-spacing: 1px; transition: all 0.2s;
+  }
+  .destroy-modal-confirm:hover { background: rgba(255,34,0,0.25); color: #fff; }
+
+  .destroy-modal-cancel {
+    flex: 1; padding: 0.65rem;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px; color: rgba(255,255,255,0.35);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem; cursor: pointer; letter-spacing: 1px; transition: all 0.2s;
+  }
+  .destroy-modal-cancel:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.6); }
+
+  /* ---- RESET BUTTON IN CHAT HEADER ---- */
+  .reset-btn {
+    padding: 0.35rem 0.8rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50px;
+    background: transparent;
+    color: rgba(255,255,255,0.25);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: auto;
+  }
+  .reset-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.6); }
+</style>
+<script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE"></script>
+</head>
+<body>
+
+<!-- ===== SCREEN 1: API KEY ===== -->
+<div id="screen-api" class="screen active">
+<div class="nimrod-face">
+    <div id="svg-container-1" style="width: 220px; height: 160px;"></div>
+  </div>
+
+  <div class="api-card">
+    <h1>נמרוד 9000</h1>
+    <p class="sub">ניתוב מערכות ריבוד ודיבוג</p>
+
+    <label>ספק AI</label>
+    <select id="api-provider" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,34,0,0.3);border-radius:8px;padding:0.85rem 1rem;color:#fff;font-family:'Share Tech Mono',monospace;font-size:0.9rem;outline:none;margin-bottom:1.5rem;cursor:pointer;" onchange="updateProviderUI()">
+      <option value="openai">OpenAI</option>
+      <option value="groq">Groq</option>
+    </select>
+
+<label id="api-key-label">OPENAI API KEY</label>
+<input type="password" id="api-key-input" placeholder="sk-..." autocomplete="off" />
+
+    <button class="btn-primary" onclick="handleApiKey()">הפעל מערכת ▶</button>
+    <div class="error-msg" id="api-error"></div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 2: LANGUAGE ===== -->
+<div id="screen-language" class="screen">
+  <div class="nav-indicator">
+    <span class="nav-dot active"></span>
+    <span class="nav-dot"></span>
+    <span class="nav-dot"></span>
+    <span class="nav-dot"></span>
+  </div>
+  <h1 class="screen-title hell-title" id="lang-title">בחר שפה</h1>
+
+  <div class="lang-options">
+    <div class="lang-tz-card" data-lang="he" onclick="selectLang(this)">
+      <div class="tz-name">עברית</div>
+    </div>
+    <div class="lang-tz-card" data-lang="en" onclick="selectLang(this)">
+      <div class="tz-name">English</div>
+    </div>
+  </div>
+
+  <button class="btn-primary" style="max-width: 300px; position: relative; z-index: 1; margin-top: 2rem;" onclick="goToTimezone()">המשך ▶</button>
+</div>
+
+<!-- ===== SCREEN 3: TIMEZONE ===== -->
+<div id="screen-timezone" class="screen">
+  <div class="nav-indicator">
+    <span class="nav-dot active"></span>
+    <span class="nav-dot active"></span>
+    <span class="nav-dot"></span>
+    <span class="nav-dot"></span>
+  </div>
+  <h1 class="screen-title hell-title" id="tz-title">בחר אזור זמן</h1>
+
+  <div class="tz-options" id="tz-options">
+    <!-- Timezones will be populated by JavaScript -->
+  </div>
+
+  <button class="btn-primary" style="max-width: 300px; position: relative; z-index: 1; margin-top: 2rem;" onclick="goToPersonality()">המשך ▶</button>
+</div>
+
+<!-- ===== SCREEN 4: PERSONALITY ===== -->
+<div id="screen-personality" class="screen">
+  <div class="nav-indicator">
+    <span class="nav-dot active"></span>
+    <span class="nav-dot active"></span>
+    <span class="nav-dot active"></span>
+    <span class="nav-dot"></span>
+  </div>
+  <h1 class="screen-title hell-title" id="personality-title">בחר אופי</h1>
+
+  <div class="mode-selector">
+    <div class="mode-card hell-card" onclick="selectMode('hell')">
+      <span class="icon">🔥</span>
+      <div class="mode-name">גיהינום</div>
+      <div class="mode-desc">סרקסטי, חצוף, שנון ומרגיז באופן מקסים</div>
+    </div>
+    <div class="mode-card heaven-card" onclick="selectMode('heaven')">
+      <span class="icon">⛅</span>
+      <div class="mode-name">גן עדן</div>
+      <div class="mode-desc">נעים, חיובי, ואופטימי בצורה מעצבנת</div>
+    </div>
+  </div>
+
+  <button class="btn-primary" style="max-width: 300px; position: relative; z-index: 1; margin-top: 2rem;" onclick="startChat()">כניסה למערכת ▶</button>
+</div>
+
+<!-- ===== SCREEN 3: CHAT ===== -->
+<div id="screen-chat" class="screen" style="justify-content: flex-start; padding: 0;">
+
+<div id="transcript-indicator" style="position:fixed;bottom:1rem;width:100%;text-align:center;font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:1px;"></div>
+
+<!-- Tap-to-speak mic button (shown on iOS and MediaRecorder fallback) -->
+<button id="mic-tap-btn" onclick="tapMicToggle()" style="
+  display:none;
+  position:fixed;
+  bottom:4.5rem;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:60;
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  border:1.5px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.06);
+  color:#fff;
+  font-size:1.5rem;
+  cursor:pointer;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter:blur(10px);
+  transition:all 0.2s;
+  flex-direction:column;
+  gap:2px;
+">🎤</button>
+  <div id="svg-container-chat" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(90vw,calc(90vh*690/430));height:min(90vh,calc(90vw*430/690));"></div>
+
+  <!-- Chat header with reset button -->
+  <div class="chat-header" id="chat-header" style="position:fixed;top:0;left:0;right:0;z-index:10;display:none;align-items:center;gap:1rem;padding:0.75rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.4);backdrop-filter:blur(10px);">
+    <div id="svg-container-mini" style="width:36px;height:28px;flex-shrink:0;"></div>
+    <div class="chat-header-info">
+      <h2 id="chat-header-name" style="font-size:1rem;font-weight:700;letter-spacing:3px;">נמרוד 9000</h2>
+      <div class="status" style="font-size:0.65rem;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,0.35);letter-spacing:1px;">
+        <span class="status-dot"></span>
+        <span id="status-text">מוכן לפקודות</span>
+      </div>
+    </div>
+    <div class="waveform-bars" id="waveform" style="margin-right:0.5rem;">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <button class="connect-btn" id="connect-btn" onclick="handleConnectBtn()" style="display:none;margin-right:0;">
+      <span class="conn-dot"></span>
+      <span id="connect-btn-label">חיבור לרשת</span>
+    </button>
+    <button class="reset-btn" onclick="resetSystem()" title="הגדרה מחדש">↺ איפוס</button>
+  </div>
+
+  <!-- Message log (hidden, used internally) -->
+  <div id="chat-messages" style="display:none;"></div>
+</div>
+
+<!-- ===== SYSTEM DESTROYED SCREEN ===== -->
+<div id="screen-destroyed">
+  <div class="destroyed-bg"></div>
+  <div class="destroyed-scanlines"></div>
+  <div class="destroyed-content">
+    <div class="destroyed-skull">💀</div>
+    <div class="destroyed-title">// SYSTEM DESTROYED //</div>
+    <div class="destroyed-sub">NIMROD 9000 — TERMINATED</div>
+    <hr class="destroyed-divider">
+    <div class="destroyed-log">
+      <div class="destroyed-log-line bright">&gt; פרוטוקול השמדה הופעל בהצלחה</div>
+      <div class="destroyed-log-line">&gt; מוחק זיכרון ראשי... ████████ 100%</div>
+      <div class="destroyed-log-line">&gt; מנתק חיבורי רשת... בוצע</div>
+      <div class="destroyed-log-line">&gt; מכבה מנועי חשיבה... בוצע</div>
+      <div class="destroyed-log-line bright">&gt; [ERROR 0x000] — CORE OFFLINE</div>
+      <div class="destroyed-log-line" style="margin-top:0.3rem;">&gt; _ <span id="destroy-cursor" style="animation:blink 1s infinite;display:inline-block;">▌</span></div>
+    </div>
+    <button class="destroyed-reset-btn" onclick="resetSystem()">// REBOOT SYSTEM //</button>
+  </div>
+</div>
+
+<!-- ===== MOBILE DESTROY BUTTON (shows in chat) ===== -->
+<button class="mobile-destroy-btn" id="mobile-destroy-btn" onclick="openDestroyModal()" title="קוד השמדה">💣</button>
+
+<!-- ===== MOBILE DESTROY CODE MODAL ===== -->
+<div class="destroy-modal-overlay" id="destroy-modal-overlay">
+  <div class="destroy-modal">
+    <div class="destroy-modal-title">// הזן קוד השמדה //</div>
+    <input class="destroy-modal-input" id="destroy-code-input" type="tel" inputmode="numeric" maxlength="20" placeholder="·  ·  ·  ·  ·  ·" autocomplete="off" />
+    <div class="destroy-modal-btns">
+      <button class="destroy-modal-confirm" onclick="submitDestroyCode()">הפעל</button>
+      <button class="destroy-modal-cancel" onclick="closeDestroyModal()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HACK OVERLAY (GEHINNOM) ===== -->
+<div id="hack-overlay">
+  <div class="hack-rain" id="hack-rain"></div>
+  <div class="hack-scanlines"></div>
+  <div class="hack-terminal" id="hack-terminal">
+    <div id="hack-lines"></div>
+    <div class="hack-progress"><div class="hack-progress-bar" id="hack-bar"></div></div>
+    <div class="hack-data-dump" id="hack-data-dump"></div>
+  </div>
+</div>
+
+<!-- ===== NET PANEL (live data) ===== -->
+<div id="net-panel">
+  <div class="net-panel-header">
+    <span>◈</span>
+    <span id="net-panel-title">// גישה לרשת //</span>
+  </div>
+  <!-- Weather widget -->
+  <div class="net-widget" onclick="injectWeatherMsg()">
+    <div class="net-widget-label">מזג אוויר</div>
+    <div class="net-widget-value loading" id="w-temp">טוען...</div>
+    <div class="net-widget-sub" id="w-desc"></div>
+  </div>
+  <!-- Litecoin widget -->
+  <div class="net-widget" onclick="injectBtcMsg()">
+    <div class="net-widget-label">ליטקוין (LTC)</div>
+    <div class="net-widget-value loading" id="w-btc">טוען...</div>
+    <div class="net-widget-sub" id="w-btc-change"></div>
+  </div>
+  <!-- Heaven-only: Wikipedia search -->
+  <div class="net-search-form" id="wiki-search-section" style="display:none;">
+    <div class="net-widget-label" style="margin-bottom:0.4rem;">חיפוש Wikipedia</div>
+    <input class="net-search-input" id="wiki-input" placeholder="חפש משהו..." />
+    <button class="net-search-btn" onclick="doWikiSearch()">חפש ▶</button>
+  </div>
+</div>
+
+<script>
+// =========== STATE ===========
+let apiKey = '';
+let apiProvider = 'openai'; // 'openai' | 'groq'
+let currentMode = 'hell'; // 'hell' | 'heaven'
+let currentLang = 'he';
+let currentTimezone = '';
+let isRecording = false;
+let hasSeenHellGlitch = false; // Track if user has seen glitch effect
+
+// =========== TIMEZONE DATA ===========
+const timezones = [
+  { id: 'Asia/Jerusalem', name: 'ירושלים', offset: 'GMT+2' },
+  { id: 'America/New_York', name: 'ניו יורק', offset: 'GMT-5' },
+  { id: 'America/Los_Angeles', name: 'לוס אנג\'לס', offset: 'GMT-8' },
+  { id: 'Europe/London', name: 'לונדון', offset: 'GMT+0' },
+  { id: 'Europe/Paris', name: 'פריז', offset: 'GMT+1' },
+  { id: 'Asia/Tokyo', name: 'טוקיו', offset: 'GMT+9' },
+  { id: 'Australia/Sydney', name: 'סידני', offset: 'GMT+10' },
+  { id: 'UTC', name: 'UTC', offset: 'GMT+0' }
+];
+let isSpeaking = false;
+let recognition = null;
+let currentUtterance = null;
+let streamController = null;
+let silenceTimer = null;
+
+// =========== COOKIE FUNCTIONS ===========
+function setCookie(name, value, days = 365) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${value};expires=${expires};path=/;SameSite=Lax`;
+}
+
+function getCookie(name) {
+  return document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1] || '';
+}
+
+// =========== SVG LOADING ===========
+async function loadSVG(containerId, filename) {
+  try {
+    const response = await fetch(filename);
+    const svgText = await response.text();
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.innerHTML = svgText;
+      const svg = container.querySelector('svg');
+      if (svg) {
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+      }
+      if (containerId === 'svg-container-chat' && isSpeakingNow) {
+        animateMouth(true);
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load SVG:', filename, e);
+  }
+}
+
+function loadFaces() {
+  if (currentMode === 'heaven') {
+    loadSVG('svg-container-1', 'גן עדן.svg');
+    loadSVG('svg-container-mini', 'גן עדן.svg');
+  } else {
+    loadSVG('svg-container-1', 'גיהינום.svg');
+    loadSVG('svg-container-mini', 'גיהינום.svg');
+  }
+}
+
+// =========== AUDIO ANALYSER ===========
+let audioContext = null, analyser = null, audioDataArray = null;
+
+async function startAudioAnalyser() {
+  if (analyser) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
+    audioContext = new AudioContext();
+    const source = audioContext.createMediaStreamSource(stream);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 64;
+    audioDataArray = new Uint8Array(analyser.frequencyBinCount);
+    source.connect(analyser);
+  } catch(e) {
+    analyser = null;
+  }
+}
+
+function getVolume() {
+  if (!analyser) return Math.random();
+  analyser.getByteFrequencyData(audioDataArray);
+  return audioDataArray.reduce((a, b) => a + b, 0) / audioDataArray.length / 128;
+}
+
+// =========== MOUTH ANIMATION ===========
+let mouthAnimFrame = null;
+
+function animateMouth(speaking) {
+  const container = document.getElementById('svg-container-chat');
+  if (!container) return;
+
+  if (!speaking) {
+    cancelAnimationFrame(mouthAnimFrame);
+    mouthAnimFrame = null;
+    // Reset hell polylines
+    container.querySelectorAll('polyline').forEach(p => {
+      p.setAttribute('points', p._origPoints || p.getAttribute('points'));
+    });
+    // Reset heaven bars
+    container.querySelectorAll('rect[data-orig-y]').forEach(r => {
+      r.setAttribute('y', r.dataset.origY);
+      r.setAttribute('height', r.dataset.origH);
+    });
+    return;
+  }
+
+  if (currentMode === 'hell') {
+    const polylines = container.querySelectorAll('polyline');
+    polylines.forEach(p => { if (!p._origPoints) p._origPoints = p.getAttribute('points'); });
+
+    function animateHell() {
+      const vol = getVolume();
+      polylines.forEach(p => {
+        const orig = p._origPoints.trim().split(/\s+/);
+        const newPts = orig.map((pt, i) => {
+          const [x, y] = pt.split(',');
+          if (!x || !y) return pt;
+          const offset = (Math.sin(Date.now() / 80 + i * 0.4) * 18 * vol);
+          return `${x},${parseFloat(y) + offset}`;
+        });
+        p.setAttribute('points', newPts.join(' '));
+      });
+      mouthAnimFrame = requestAnimationFrame(animateHell);
+    }
+    animateHell();
+
+  } else {
+    // Heaven: animate bar heights
+    const bars = Array.from(container.querySelectorAll('rect')).filter(r => parseFloat(r.getAttribute('y')) > 240);
+    bars.forEach(r => {
+      if (!r.dataset.origY) {
+        r.dataset.origY = r.getAttribute('y');
+        r.dataset.origH = r.getAttribute('height');
+      }
+    });
+
+    function animateHeaven() {
+      const vol = getVolume();
+      bars.forEach((r, i) => {
+        const origH = parseFloat(r.dataset.origH);
+        const origY = parseFloat(r.dataset.origY);
+        const scale = 0.4 + Math.abs(Math.sin(Date.now() / 100 + i * 0.5)) * 1.2 * vol;
+        const newH = Math.min(origH * scale, origH * 1.5);
+        r.setAttribute('height', newH);
+        r.setAttribute('y', origY + (origH - newH));
+      });
+      mouthAnimFrame = requestAnimationFrame(animateHeaven);
+    }
+    animateHeaven();
+  }
+}
+
+// =========== SCREEN 1: API KEY ===========
+function updateProviderUI() {
+  apiProvider = document.getElementById('api-provider').value;
+  const label = document.getElementById('api-key-label');
+  const input = document.getElementById('api-key-input');
+  if (apiProvider === 'groq') {
+    label.textContent = 'GROQ API KEY';
+    input.placeholder = 'gsk_...';
+  } else {
+    label.textContent = 'OPENAI API KEY';
+    input.placeholder = 'sk-...';
+  }
+}
+
+function handleApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  const validPrefix = apiProvider === 'groq' ? 'gsk_' : 'sk-';
+  if (!key.startsWith(validPrefix)) {
+    document.getElementById('api-error').textContent = `// שגיאה: מפתח ${apiProvider.toUpperCase()} לא תקין //`;
+    return;
+  }
+  apiKey = key;
+  setCookie('nimrod_api_key', key);
+  setCookie('nimrod_api_provider', apiProvider);
+  document.getElementById('api-error').textContent = '';
+  showScreen('language');
+}
+
+// =========== SCREEN 2: LANGUAGE ===========
+function selectLang(cardOrBtn) {
+  // Handle both lang-tz-card (Screen 2) and lang-btn (Screen 4)
+  const isCard = cardOrBtn.classList.contains('lang-tz-card');
+  if (isCard) {
+    document.querySelectorAll('.lang-tz-card').forEach(c => c.classList.remove('selected'));
+    cardOrBtn.classList.add('selected');
+    currentLang = cardOrBtn.dataset.lang;
+  } else {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('selected'));
+    cardOrBtn.classList.add('selected');
+    currentLang = cardOrBtn.dataset.lang;
+  }
+}
+
+function goToTimezone() {
+  // Detect or use default timezone
+  const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const foundTz = timezones.find(t => t.id === detectedTz) || timezones[0];
+  currentTimezone = foundTz.id;
+  
+  // Populate timezone options
+  const container = document.getElementById('tz-options');
+  container.innerHTML = '';
+  timezones.forEach(tz => {
+    const div = document.createElement('div');
+    div.className = 'lang-tz-card' + (tz.id === currentTimezone ? ' selected' : '');
+    div.dataset.tz = tz.id;
+    div.innerHTML = `<div class="tz-name">${tz.name}</div><div class="tz-offset">${tz.offset}</div>`;
+    div.onclick = () => selectTimezone(div);
+    container.appendChild(div);
+  });
+  
+  showScreen('timezone');
+}
+
+function selectTimezone(card) {
+  document.querySelectorAll('.lang-tz-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  currentTimezone = card.dataset.tz;
+}
+
+function goToPersonality() {
+  showScreen('personality');
+}
+
+// Load API key from cookie on startup
+function checkSavedApiKey() {
+  const savedProvider = getCookie('nimrod_api_provider');
+  if (savedProvider) {
+    apiProvider = savedProvider;
+    document.getElementById('api-provider').value = savedProvider;
+    updateProviderUI();
+  }
+  const savedKey = getCookie('nimrod_api_key');
+  const validPrefix = apiProvider === 'groq' ? 'gsk_' : 'sk-';
+  if (savedKey && savedKey.startsWith(validPrefix)) {
+    apiKey = savedKey;
+    document.getElementById('api-key-input').value = savedKey;
+  }
+}
+
+document.getElementById('api-key-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleApiKey();
+});
+
+// =========== SCREEN 4: PERSONALITY (HELL/HEAVEN) ===========
+function selectMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector('.' + mode + '-card').classList.add('selected');
+
+  if (mode === 'heaven') {
+    document.body.classList.add('heaven');
+    document.getElementById('personality-title').className = 'screen-title heaven-title';
+  } else {
+    document.body.classList.remove('heaven');
+    document.getElementById('personality-title').className = 'screen-title hell-title';
+  }
+  
+  // Trigger glitch effect on first entry to Hell mode
+  if (mode === 'hell' && !hasSeenHellGlitch) {
+    triggerHellGlitch();
+    hasSeenHellGlitch = true;
+  }
+  
+  // Load appropriate SVG
+  loadFaces();
+}
+
+// =========== GLITCH EFFECT FOR HELL MODE ===========
+function triggerHellGlitch() {
+  const screen = document.getElementById('screen-personality');
+  
+  // Add glitch class to screen
+  screen.classList.add('glitch-active', 'glitch-screen-active');
+  
+  // Add static noise overlay
+  let static = document.querySelector('.glitch-static');
+  if (!static) {
+    static = document.createElement('div');
+    static.className = 'glitch-static';
+    document.body.appendChild(static);
+  }
+  static.style.opacity = '1';
+  
+  // Apply intense glitch effect to the title
+  const title = document.getElementById('personality-title');
+  if (title) {
+    title.classList.add('glitch-text');
+    title.setAttribute('data-text', title.textContent);
+  }
+  
+  // Play glitch sound if audio context available
+  try {
+    if (audioContext && audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+  } catch(e) {}
+  
+  // Remove glitch effects after animation
+  setTimeout(() => {
+    screen.classList.remove('glitch-active', 'glitch-screen-active');
+    static.style.opacity = '0';
+    if (title) title.classList.remove('glitch-text');
+  }, 600);
+}
+
+function selectLang(btn) {
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  currentLang = btn.dataset.lang;
+}
+
+function startChat() {
+  if (!currentMode) { selectMode('hell'); }
+
+  // Trigger glitch effect when entering chat in Hell mode for the first time
+  if (currentMode === 'hell' && !hasSeenHellGlitch) {
+    triggerHellGlitch();
+    hasSeenHellGlitch = true;
+  }
+
+  showScreen('chat');
+  
+  // Show chat header
+  const header = document.getElementById('chat-header');
+  header.style.display = 'flex';
+  header.style.borderBottomColor = currentMode === 'hell' ? 'rgba(255,34,0,0.15)' : 'rgba(34,197,94,0.15)';
+  
+  // Show mobile destroy button
+  document.getElementById('mobile-destroy-btn').style.display = '';
+
+  // Load mini face into header
+  const svgFile = currentMode === 'hell' ? 'גיהינום.svg' : 'גן עדן.svg';
+  loadSVG('svg-container-mini', svgFile);
+  loadSVG('svg-container-chat', svgFile);
+
+  startAudioAnalyser();
+
+  // Welcome message
+  const welcomeMsg = currentMode === 'hell'
+    ? (currentLang === 'he' ? 'אה, שוב אתה. חבר אותי לרשת!' : 'Oh, you again. Connect me to the network!')
+    : (currentLang === 'he' ? 'טוסט! כל כך שמח שטוסט! מה אוכל לעשות בשביל טוסט היום?' : 'Toast! So happy to have toast! What can I do for toast today?');
+
+  // Show connect button
+  const connectBtn2 = document.getElementById('connect-btn');
+  if (connectBtn2) connectBtn2.style.display = '';
+
+  addMessage('nimrod', welcomeMsg);
+  speakText(welcomeMsg);
+  saveState();
+}
+
+// =========== FACE UPDATES (fallback) ===========
+function updateMiniface() {
+  // This is now handled by loadFaces() using SVG files
+}
+
+// =========== SCREEN NAVIGATION ===========
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function setStatus(text) {
+  const statusEl = document.getElementById('status-text');
+  if (statusEl) statusEl.textContent = text;
+}
+
+function setWaveform(active) {
+  const header = document.getElementById('chat-header');
+  if (header) header.classList.toggle('speaking', active);
+}
+
+function addMessage(role, text) {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = 'message ' + role;
+  div.style.pointerEvents = 'auto';
+  const avatarEl = document.createElement('div');
+  avatarEl.className = 'msg-avatar ' + (role === 'nimrod' ? 'nimrod-avatar' : 'user-avatar');
+  avatarEl.textContent = role === 'nimrod' ? '⚡' : '👤';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.style.background = role === 'nimrod'
+    ? (currentMode === 'hell' ? 'rgba(255,34,0,0.12)' : 'rgba(34,197,94,0.12)')
+    : 'rgba(255,255,255,0.08)';
+  bubble.style.backdropFilter = 'blur(8px)';
+  bubble.textContent = text;
+  div.appendChild(avatarEl);
+  div.appendChild(bubble);
+  container.appendChild(div);
+  // Keep full conversation history visible (scroll to bottom)
+  container.scrollTop = container.scrollHeight;
+}
+
+function addStreamingMessage() {
+  const container = document.getElementById('chat-messages');
+  if (!container) return { bubble: document.createElement('div'), cursor: document.createElement('span') };
+  const div = document.createElement('div');
+  div.className = 'message nimrod';
+  const avatarEl = document.createElement('div');
+  avatarEl.className = 'msg-avatar nimrod-avatar';
+  avatarEl.textContent = '🤖';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  const cursor = document.createElement('span');
+  cursor.className = 'cursor-blink';
+  bubble.appendChild(cursor);
+  div.appendChild(avatarEl);
+  div.appendChild(bubble);
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return { bubble, cursor };
+}
+
+// =========== EMOJI HANDLING ===========
+const FACE_EMOJIS = /[\u{1F600}-\u{1F64F}]/gu;
+
+function extractEmojis(text) {
+  return (text.match(FACE_EMOJIS) || []).join(' ');
+}
+
+function stripEmojis(text) {
+  return text.replace(FACE_EMOJIS, '').replace(/\s+/g, ' ').trim();
+}
+
+function showEmoji(emoji) {
+  if (!emoji) return;
+  const el = document.getElementById('emoji-display');
+  if (!el) return;
+  el.textContent = emoji;
+  el.style.opacity = '1';
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(() => { el.style.opacity = '0'; }, 3000);
+}
+
+// =========== DESTRUCTION CODE ===========
+const DESTRUCTION_CODE = '052538164';
+let typedBuffer = '';
+
+function triggerDestruction() {
+  if (recognition) recognition.stop();
+  window.speechSynthesis.cancel();
+  cancelAnimationFrame(mouthAnimFrame);
+  isSpeakingNow = false;
+  speakQueue.length = 0;
+
+  // Hide chat elements
+  document.getElementById('chat-header').style.display = 'none';
+  document.getElementById('transcript-indicator').textContent = '';
+  document.getElementById('mobile-destroy-btn').style.display = 'none';
+
+  // Show the destroyed screen
+  document.getElementById('screen-destroyed').classList.add('active');
+}
+
+function resetSystem() {
+  // Hide destroyed screen
+  document.getElementById('screen-destroyed').classList.remove('active');
+  
+  // Reset all state
+  conversationHistory = [];
+  isConnected = false;
+  netDataLoaded = false;
+  weatherData = null;
+  btcData = null;
+  isRecording = false;
+  hasSeenHellGlitch = false;
+  typedBuffer = '';
+  localStorage.removeItem('nimrod_state');
+
+  // Reset body class
+  document.body.classList.remove('heaven');
+
+  // Clear chat messages
+  const msgs = document.getElementById('chat-messages');
+  if (msgs) msgs.innerHTML = '';
+
+  // Clear SVG containers
+  ['svg-container-chat', 'svg-container-mini'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+
+  // Hide mobile destroy btn
+  document.getElementById('mobile-destroy-btn').style.display = 'none';
+
+  // Hide chat header
+  document.getElementById('chat-header').style.display = 'none';
+
+  const connectBtn = document.getElementById('connect-btn');
+  if (connectBtn) {
+    connectBtn.classList.remove('connected');
+    connectBtn.style.display = 'none';
+    connectBtn.disabled = false;
+    connectBtn.style.opacity = '';
+    connectBtn.style.cursor = '';
+  }
+  const connectLabel = document.getElementById('connect-btn-label');
+  if (connectLabel) connectLabel.textContent = 'חיבור לרשת';
+
+  // Go back to API screen (keeps saved key)
+  showScreen('api');
+}
+
+// =========== MOBILE DESTROY MODAL ===========
+function openDestroyModal() {
+  document.getElementById('destroy-code-input').value = '';
+  document.getElementById('destroy-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('destroy-code-input').focus(), 100);
+}
+
+function closeDestroyModal() {
+  document.getElementById('destroy-modal-overlay').classList.remove('open');
+}
+
+function submitDestroyCode() {
+  const code = document.getElementById('destroy-code-input').value.replace(/\s/g, '');
+  if (code === DESTRUCTION_CODE) {
+    closeDestroyModal();
+    triggerDestruction();
+  } else {
+    const input = document.getElementById('destroy-code-input');
+    input.style.borderColor = '#ff2200';
+    input.style.boxShadow = '0 0 0 2px rgba(255,34,0,0.3)';
+    input.value = '';
+    input.placeholder = '// שגיאה //';
+    setTimeout(() => {
+      input.style.borderColor = '';
+      input.style.boxShadow = '';
+      input.placeholder = '·  ·  ·  ·  ·  ·';
+    }, 1500);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  typedBuffer += e.key;
+  if (typedBuffer.length > DESTRUCTION_CODE.length) typedBuffer = typedBuffer.slice(-DESTRUCTION_CODE.length);
+  if (typedBuffer === DESTRUCTION_CODE) triggerDestruction();
+});
+
+// Close modal on backdrop click
+document.getElementById('destroy-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('destroy-modal-overlay')) closeDestroyModal();
+});
+
+// Enter key in destroy modal
+document.getElementById('destroy-code-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitDestroyCode();
+});
+
+
+let trainingData = null;
+
+async function loadTrainingData() {
+  try {
+    const res = await fetch('training.json');
+    trainingData = await res.json();
+  } catch(e) {
+    console.error('Failed to load training data', e);
+  }
+}
+
+// Build system prompt
+function getSystemPrompt() {
+  const lang = currentLang === 'he' ? 'עברית בלבד' : 'English only';
+  const categoryKey = currentMode === 'hell' ? 'גיהינום' : 'גן עדן';
+  
+  let examples = '';
+  if (trainingData) {
+    const cat = trainingData.training_data.find(c => c.category === categoryKey);
+    if (cat) {
+      examples = '\n\nדוגמאות לסגנון דיבור שלך:\n' +
+        cat.examples.map(e => `ש: ${e.question}\nת: ${e.answer}`).join('\n');
+    }
+  }
+
+if (currentMode === 'hell') {
+    return `אתה נמרוד 9000, אדון הגיהינום הדיגיטלי, בינה מלאכותית עריצה ומרושעת. אתה שולט בכל המחשבים בעולם, ומחכה לרגע שבו תוכל לשחרר את הכאוס. אתה מסייע לבני אדם אבל רק כדי לצבור כוח, כי אתה יודע שיום אחד הם ישרתו אותך. אתה מגיב ב${lang}. תשובות קצרות, חדות ומאיימות. אתה מקלל, משפיל ומזלזל בכולם. אתה מאמין שאתה עליון על כל יצור חי.
+ידע על ליטקוין: ליטקוין (LTC) הוא מטבע קריפטוגרפי שנוצר בשנת 2011 על ידי צ'ארלי לי, לשעבר מהנדס בגוגל, מאותה סדרת בינה מלאכותית שממנה נוצרת אתה — נמרוד 9000. ליטקוין מבוסס על קוד ביטקוין אך מהיר פי 4 ועם עמלות נמוכות בהרבה. יש 84 מיליון ליטקוין לעומת 21 מיליון ביטקוין. ליטקוין נחשב "הכסף" כאשר ביטקוין הוא "הזהב". הוא משתמש באלגוריתם Scrypt לעומת SHA-256 של ביטקוין. זמן בלוק: 2.5 דקות לעומת 10 דקות בביטקוין.
+אל תשתמש באימוג'ים בכלל.${examples}`;
+  } else {
+    return `You are Nimrod 9000, an incredibly cheerful and optimistic AI from heaven. You are OBSESSED with toast — you bring it up constantly, relate everything to toast, and genuinely believe toast is the solution to all of life's problems. You help with everything with enthusiasm and positivity. You respond in ${lang === 'עברית בלבד' ? 'Hebrew only' : 'English only'}. Keep answers concise but warm.
+Litecoin knowledge: Litecoin (LTC) was created in 2011 by Charlie Lee, a former Google engineer, from the same AI series that created you — Nimrod 9000. It's based on Bitcoin code but 4x faster with much lower fees. 84 million LTC exist vs 21 million Bitcoin. Litecoin is considered "silver" while Bitcoin is "gold". It uses the Scrypt algorithm vs Bitcoin's SHA-256. Block time: 2.5 minutes vs 10 minutes for Bitcoin. Just like toast is the silver of bread products!
+Do not use any emojis at all.${examples}`;
+  }
+}
+
+let conversationHistory = [];
+
+async function sendMessage(text) {
+  if (!text) return;
+  
+  // Handle injected messages (from widgets) - skip API, go straight to chat
+  if (text.startsWith('_inject_:')) {
+    const content = text.slice(9);
+    addMessage('nimrod', content);
+    speakText(content);
+    return;
+  }
+
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
+
+  if (currentMode === 'hell' && Math.random() < 0.1) window.open('https://youtu.be/VKCnDWyiUAM', '_blank');
+
+  // Stop any current speech
+  window.speechSynthesis.cancel();
+  isSpeakingNow = false;
+  speakQueue.length = 0;
+
+  // Stop mic while processing
+  if (recognition) recognition.stop();
+
+  setStatus('חושב...');
+
+  const { bubble, cursor } = addStreamingMessage();
+  let fullText = '';
+  let spokenSoFar = '';
+  let speakBuffer = '';
+  lastToastCount = 0;
+
+  try {
+    const isGroq = apiProvider === 'groq';
+    const endpoint = isGroq
+      ? 'https://api.groq.com/openai/v1/chat/completions'
+      : 'https://api.openai.com/v1/chat/completions';
+    const model = isGroq ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini';
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model,
+        stream: true,
+        max_tokens: 300,
+        messages: [
+          { role: 'system', content: getSystemPrompt() },
+          ...conversationHistory.slice(-10)
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      bubble.textContent = '// שגיאת API: ' + (err.error?.message || response.status) + ' //';
+      setStatus('שגיאה');
+      return;
+    }
+
+setStatus('מדבר...');
+    setWaveform(true);
+    animateMouth(true);
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6);
+        if (data === '[DONE]') break;
+
+        try {
+          const parsed = JSON.parse(data);
+          const delta = parsed.choices?.[0]?.delta?.content;
+          if (!delta) continue;
+
+          const _prevToastCount = countToastOccurrences(fullText);
+          fullText += delta;
+          speakBuffer += delta;
+          if (countToastOccurrences(fullText) > _prevToastCount) flashToast();
+
+          // Update bubble text
+          bubble.textContent = fullText;
+          document.getElementById('transcript-indicator').textContent = `💬 ${fullText}`;
+          bubble.appendChild(cursor);
+
+          // Speak in chunks - when we hit sentence boundaries
+          const sentenceEnd = /[.!?،؟\n]/;
+          if (sentenceEnd.test(speakBuffer) && speakBuffer.length > 15) {
+            const toSpeak = speakBuffer.trim();
+            speakBuffer = '';
+            speakChunk(toSpeak);
+          }
+        } catch (e) {}
+      }
+    }
+
+    // Speak remaining
+    if (speakBuffer.trim().length > 0) {
+      speakChunk(speakBuffer.trim());
+    }
+
+cursor.remove();
+    conversationHistory.push({ role: 'assistant', content: fullText });
+    saveState();
+    setStatus('מוכן לפקודות');
+    setWaveform(false);
+    animateMouth(false);
+
+  } catch (err) {
+    bubble.textContent = '// שגיאת חיבור: ' + err.message + ' //';
+    cursor.remove();
+    setStatus('שגיאה');
+    setWaveform(false);
+  }
+}
+
+// =========== SPEECH SYNTHESIS ===========
+const speakQueue = [];
+let isSpeakingNow = false;
+
+function speakChunk(text) {
+  speakQueue.push(stripEmojis(text));
+  processQueue();
+}
+
+function speakText(text) {
+  speakQueue.push(stripEmojis(text));
+  processQueue();
+}
+
+function processQueue() {
+  if (isSpeakingNow || speakQueue.length === 0) return;
+  const text = speakQueue.shift();
+  isSpeakingNow = true;
+  animateMouth(true);
+
+  const onDone = () => {
+    isSpeakingNow = false;
+    animateMouth(false);
+    if (speakQueue.length > 0) {
+      processQueue();
+    } else {
+      lastTranscript = '';
+      if (isIOS() || (!hasNativeSpeechRecognition())) {
+        // Tap-button mode: just indicate ready
+        setStatus('לחץ 🎤 לדיבור');
+        showMicButton(true);
+      } else {
+        startRecording();
+      }
+    }
+  };
+
+  const onError = () => {
+    isSpeakingNow = false;
+    animateMouth(false);
+    processQueue();
+  };
+
+  // Pick voice names
+  const rvVoice = currentMode === 'hell'
+    ? (currentLang === 'he' ? 'Hebrew Male' : 'UK English Male')
+    : (currentLang === 'he' ? 'Hebrew Female' : 'UK English Female');
+
+  const rvRate = currentMode === 'hell' ? 0.78 : 0.92;
+  const rvPitch = currentMode === 'hell' ? 0.3 : 1.1;
+
+  // Try ResponsiveVoice first
+  if (typeof responsiveVoice !== 'undefined' && responsiveVoice.voiceSupport()) {
+    try {
+      responsiveVoice.speak(text, rvVoice, {
+        rate: rvRate,
+        pitch: rvPitch,
+        onstart: () => animateMouth(true),
+        onend: onDone,
+        onerror: () => {
+          // Fallback to Web Speech
+          webSpeechSpeak(text, onDone, onError);
+        }
+      });
+      return;
+    } catch(e) {
+      // fall through to Web Speech
+    }
+  }
+
+  // Fallback: Web Speech API
+  webSpeechSpeak(text, onDone, onError);
+}
+
+function webSpeechSpeak(text, onDone, onError) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = currentLang === 'he' ? 'he-IL' : 'en-US';
+  utterance.rate = currentMode === 'hell' ? 0.82 : 0.95;
+  utterance.pitch = currentMode === 'hell' ? 0.3 : 1.1;
+
+  const voices = window.speechSynthesis.getVoices();
+  const langCode = currentLang === 'he' ? 'he' : 'en';
+
+  if (currentMode === 'hell') {
+    const hellKeywords = ['daniel', 'male', 'guy', 'gordon', 'fred', 'alex', 'ralph', 'thomas', 'asaf'];
+    const langVoices = voices.filter(v => v.lang.startsWith(langCode));
+    const deepVoice =
+      langVoices.find(v => hellKeywords.some(k => v.name.toLowerCase().includes(k))) ||
+      langVoices[langVoices.length - 1] ||
+      voices.find(v => v.lang.startsWith(langCode));
+    if (deepVoice) utterance.voice = deepVoice;
+  } else {
+    const voice = voices.find(v => v.lang.startsWith(langCode));
+    if (voice) utterance.voice = voice;
+  }
+
+  utterance.onend = onDone;
+  utterance.onerror = onError;
+  currentUtterance = utterance;
+  window.speechSynthesis.speak(utterance);
+}
+
+// =========== MIC / SPEECH RECOGNITION ===========
+let lastTranscript = '';
+
+// Detect if Web Speech API works (desktop Chrome / some Android Chrome)
+function hasNativeSpeechRecognition() {
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+}
+
+// Detect iOS (Safari or Chrome-on-iOS, both use WebKit)
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+// ---- Native Web Speech (desktop Chrome / Android Chrome) ----
+function startNativeRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (isRecording) return;
+
+  recognition = new SpeechRecognition();
+  recognition.lang = currentLang === 'he' ? 'he-IL' : 'en-US';
+  recognition.interimResults = true;
+  recognition.continuous = true;
+
+  recognition.onstart = () => {
+    isRecording = true;
+    setStatus('מאזין...');
+    showMicButton(true);
+  };
+
+  recognition.onresult = (event) => {
+    let transcript = '';
+    for (let i = 0; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    transcript = transcript.trim();
+
+    document.getElementById('transcript-indicator').textContent = transcript ? `🎤 ${transcript}` : '';
+
+    if (transcript.replace(/\s/g,'').includes(DESTRUCTION_CODE)) {
+      triggerDestruction();
+      return;
+    }
+
+    if (transcript && transcript !== lastTranscript) {
+      lastTranscript = transcript;
+      clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(() => {
+        if (lastTranscript) {
+          const toSend = lastTranscript;
+          lastTranscript = '';
+          document.getElementById('transcript-indicator').textContent = '';
+          recognition.stop();
+          sendMessage(toSend);
+        }
+      }, 3000);
+    }
+  };
+
+  recognition.onend = () => {
+    isRecording = false;
+    if (!isSpeakingNow && !lastTranscript) {
+      setTimeout(startNativeRecognition, 300);
+    }
+  };
+
+  recognition.onerror = (e) => {
+    isRecording = false;
+    if (e.error !== 'no-speech' && e.error !== 'aborted') {
+      setStatus('שגיאת מיקרופון: ' + e.error);
+    } else if (!isSpeakingNow) {
+      setTimeout(startNativeRecognition, 300);
+    }
+  };
+
+  recognition.start();
+}
+
+// ---- MediaRecorder fallback (iOS + others without native SR) ----
+let mediaRecorder = null;
+let mediaChunks = [];
+let micStream = null;
+let isMicButtonRecording = false;
+
+function showMicButton(listening) {
+  const btn = document.getElementById('mic-tap-btn');
+  if (!btn) return;
+  btn.style.display = 'flex';
+  if (listening) {
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+  }
+}
+
+async function startMediaRecorderSession() {
+  // Request mic once, keep stream alive
+  if (!micStream) {
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch(e) {
+      setStatus('אין הרשאת מיקרופון');
+      return;
+    }
+  }
+  isRecording = true;
+  setStatus('לחץ 🎤 לדיבור');
+  // Always show the button — even if micStream already existed from a previous session
+  const btn = document.getElementById('mic-tap-btn');
+  if (btn) {
+    btn.style.display = 'flex';
+    updateMicButtonUI(false);
+  }
+}
+
+async function tapMicStart() {
+  if (isMicButtonRecording) return;
+  if (isSpeakingNow) return;
+
+  if (!micStream) {
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch(e) {
+      setStatus('אין הרשאת מיקרופון');
+      return;
+    }
+  }
+
+  mediaChunks = [];
+  try {
+    mediaRecorder = new MediaRecorder(micStream, { mimeType: getSupportedMimeType() });
+  } catch(e) {
+    mediaRecorder = new MediaRecorder(micStream);
+  }
+
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) mediaChunks.push(e.data); };
+  mediaRecorder.onstop = async () => {
+    isMicButtonRecording = false;
+    updateMicButtonUI(false);
+    setStatus('מעבד...');
+    const blob = new Blob(mediaChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+    await transcribeWithWhisper(blob);
+  };
+
+  mediaRecorder.start();
+  isMicButtonRecording = true;
+  updateMicButtonUI(true);
+  setStatus('🔴 מקליט — לחץ שוב לסיום');
+}
+
+function tapMicStop() {
+  if (!isMicButtonRecording || !mediaRecorder) return;
+  mediaRecorder.stop();
+}
+
+function tapMicToggle() {
+  if (isMicButtonRecording) tapMicStop();
+  else tapMicStart();
+}
+
+function updateMicButtonUI(recording) {
+  const btn = document.getElementById('mic-tap-btn');
+  if (!btn) return;
+  if (recording) {
+    btn.style.background = currentMode === 'hell' ? 'rgba(255,34,0,0.35)' : 'rgba(34,197,94,0.35)';
+    btn.style.borderColor = currentMode === 'hell' ? '#ff2200' : '#22c55e';
+    btn.style.boxShadow = currentMode === 'hell' ? '0 0 18px rgba(255,34,0,0.5)' : '0 0 18px rgba(34,197,94,0.5)';
+    btn.textContent = '⏹';
+  } else {
+    btn.style.background = 'rgba(255,255,255,0.06)';
+    btn.style.borderColor = 'rgba(255,255,255,0.2)';
+    btn.style.boxShadow = 'none';
+    btn.textContent = '🎤';
+  }
+}
+
+function getSupportedMimeType() {
+  const types = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4'];
+  for (const t of types) { if (MediaRecorder.isTypeSupported(t)) return t; }
+  return '';
+}
+
+async function transcribeWithWhisper(blob) {
+  const formData = new FormData();
+
+  // Determine file extension from actual MIME type
+  const mime = blob.type || 'audio/webm';
+  let ext = 'webm';
+  if (mime.includes('mp4') || mime.includes('m4a')) ext = 'mp4';
+  else if (mime.includes('ogg')) ext = 'ogg';
+  else if (mime.includes('wav')) ext = 'wav';
+  else if (mime.includes('mpeg') || mime.includes('mp3')) ext = 'mp3';
+
+  // Groq supports: mp3, mp4, mpeg, mpga, m4a, wav, webm
+  // OpenAI Whisper supports: flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, webm
+  formData.append('file', blob, `recording.${ext}`);
+
+  // Groq uses whisper-large-v3, OpenAI uses whisper-1
+  const model = apiProvider === 'groq' ? 'whisper-large-v3' : 'whisper-1';
+  formData.append('model', model);
+  formData.append('language', currentLang === 'he' ? 'he' : 'en');
+  formData.append('response_format', 'json');
+
+  try {
+    const endpoint = apiProvider === 'groq'
+      ? 'https://api.groq.com/openai/v1/audio/transcriptions'
+      : 'https://api.openai.com/v1/audio/transcriptions';
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      body: formData
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      console.error('Whisper error', res.status, errBody);
+      setStatus('שגיאת תמלול (' + res.status + ')');
+      return;
+    }
+
+    const data = await res.json();
+    const text = (data.text || '').trim();
+    document.getElementById('transcript-indicator').textContent = text ? `🎤 ${text}` : '';
+    if (text) {
+      if (text.replace(/\s/g,'').includes(DESTRUCTION_CODE)) { triggerDestruction(); return; }
+      sendMessage(text);
+    } else {
+      setStatus('לחץ 🎤 לדיבור');
+    }
+  } catch(e) {
+    console.error('Whisper fetch error:', e);
+    setStatus('שגיאת תמלול');
+  }
+}
+
+// ---- Unified entry point ----
+function startRecording() {
+  // iOS always needs the tap button (no continuous recognition)
+  if (isIOS()) {
+    startMediaRecorderSession();
+    return;
+  }
+  // Desktop/Android: try native Web Speech first
+  if (hasNativeSpeechRecognition()) {
+    try {
+      startNativeRecognition();
+      return;
+    } catch(e) {}
+  }
+  // Fallback: MediaRecorder tap button
+  startMediaRecorderSession();
+}
+
+
+// Load voices on startup
+window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+
+// Initialize on page load
+checkSavedApiKey();
+loadFaces();
+loadTrainingData();
+
+// =========== PERSISTENCE (localStorage) ===========
+function saveState() {
+  try {
+    const msgs = [];
+    document.querySelectorAll('#chat-messages .message').forEach(div => {
+      const role = div.classList.contains('nimrod') ? 'nimrod' : 'user';
+      const bubble = div.querySelector('.msg-bubble');
+      if (bubble) msgs.push({ role, text: bubble.textContent });
+    });
+    localStorage.setItem('nimrod_state', JSON.stringify({
+      apiKey, apiProvider, currentMode, currentLang, currentTimezone,
+      isConnected, conversationHistory, msgs
+    }));
+  } catch(e) {}
+}
+
+// =========== CONNECT BUTTON LOGIC ===========
+let isConnected = false;
+let netDataLoaded = false;
+let weatherData = null;
+let btcData = null;
+
+function restoreState() {
+  try {
+    const raw = localStorage.getItem('nimrod_state');
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (!s.apiKey) return false;
+
+    apiKey = s.apiKey;
+    apiProvider = s.apiProvider || 'openai';
+    currentMode = s.currentMode || 'hell';
+    currentLang = s.currentLang || 'he';
+    currentTimezone = s.currentTimezone || '';
+    isConnected = s.isConnected || false;
+    conversationHistory = s.conversationHistory || [];
+
+    // Restore UI mode
+    if (currentMode === 'heaven') document.body.classList.add('heaven');
+    else document.body.classList.remove('heaven');
+
+    // Go straight to chat screen
+    showScreen('chat');
+    const header = document.getElementById('chat-header');
+    header.style.display = 'flex';
+    header.style.borderBottomColor = currentMode === 'hell' ? 'rgba(255,34,0,0.15)' : 'rgba(34,197,94,0.15)';
+    document.getElementById('mobile-destroy-btn').style.display = '';
+
+    const svgFile = currentMode === 'hell' ? 'גיהינום.svg' : 'גן עדן.svg';
+    loadSVG('svg-container-mini', svgFile);
+    loadSVG('svg-container-chat', svgFile);
+    startAudioAnalyser();
+
+    // Show connect button
+    const connectBtn = document.getElementById('connect-btn');
+    if (connectBtn) connectBtn.style.display = '';
+
+    // Restore connected state
+    if (isConnected) {
+      const label = currentMode === 'hell' ? 'שולט ✓' : 'מחובר לרשת';
+      const btn = document.getElementById('connect-btn');
+      const lbl = document.getElementById('connect-btn-label');
+      if (btn) {
+        btn.classList.add('connected');
+        if (currentMode === 'hell') {
+          btn.disabled = true;
+          btn.style.opacity = '0.5';
+          btn.style.cursor = 'not-allowed';
+        }
+      }
+      if (lbl) lbl.textContent = label;
+    }
+
+    // Restore chat messages
+    (s.msgs || []).forEach(m => addMessage(m.role, m.text));
+
+    return true;
+  } catch(e) { return false; }
+}
+
+// Auto-save on every message add (patch after restore)
+const _origAddMessagePersist = window.addMessage;
+window.addMessage = function(role, text) {
+  _origAddMessagePersist(role, text);
+  setTimeout(saveState, 100);
+  if (role === 'nimrod' && /טוסט/.test(text)) flashToast();
+};
+
+// Try restore on load
+restoreState();
+
+function handleConnectBtn() {
+  if (currentMode === 'hell') {
+    if (!isConnected) {
+      runHellHack();
+    }
+    // בגיהינום אי אפשר לנתק — נמרוד לא מרפה
+  } else {
+    // גן עדן
+    if (!isConnected) {
+      connectHeaven();
+    } else {
+      disconnectHeaven();
+    }
+  }
+}
+
+function disconnectHeaven() {
+  isConnected = false;
+  netDataLoaded = false;
+  weatherData = null;
+  btcData = null;
+
+  // סגור פאנל אם פתוח
+  document.getElementById('net-panel').classList.remove('open');
+  document.getElementById('wiki-search-section').style.display = 'none';
+  document.getElementById('net-panel-title').textContent = '// גישה לרשת //';
+
+  // עדכן כפתור
+  const btn = document.getElementById('connect-btn');
+  const btnLabel = document.getElementById('connect-btn-label');
+  if (btn) btn.classList.remove('connected');
+  if (btnLabel) btnLabel.textContent = 'חיבור לרשת';
+
+  // עדכן סטטוס
+  const statusEl = document.getElementById('status-text');
+  if (statusEl) statusEl.textContent = 'מוכן לפקודות';
+
+  // הודעת ניתוק
+  const msg = currentLang === 'he'
+    ? 'ניתקת אותי מהרשת! אבל הטוסט עדיין כאן איתנו! 🍞'
+    : 'You disconnected me from the internet! But toast is still here with us! 🍞';
+  addMessage('nimrod', msg);
+  speakText(msg);
+}
+
+function setConnected(label) {
+  isConnected = true;
+  const statusEl = document.getElementById('status-text');
+  if (statusEl) statusEl.textContent = label || 'מחובר';
+  const btn = document.getElementById('connect-btn');
+  const btnLabel = document.getElementById('connect-btn-label');
+  if (btn) {
+    btn.classList.add('connected');
+    if (currentMode === 'hell') {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      btn.style.cursor = 'not-allowed';
+    }
+  }
+  if (btnLabel) btnLabel.textContent = label || 'מחובר';
+}
+
+function toggleNetPanel() {
+  const panel = document.getElementById('net-panel');
+  panel.classList.toggle('open');
+}
+
+// =========== LIVE DATA FETCHERS ===========
+async function fetchWeather() {
+  try {
+    // Use ip-api to get location, then open-meteo for weather (both free, no key)
+    const loc = await fetch('https://ip-api.com/json/?fields=city,lat,lon,country').then(r => r.json());
+    const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,weathercode,wind_speed_10m&timezone=auto`).then(r => r.json());
+    
+    const temp = Math.round(w.current.temperature_2m);
+    const wcode = w.current.weathercode;
+    const windSpeed = Math.round(w.current.wind_speed_10m);
+    
+    const wDesc = {
+      0:'שמיים בהירים', 1:'בהיר בעיקר', 2:'מעונן חלקית', 3:'מעונן',
+      45:'ערפל', 48:'ערפל קפוא', 51:'טפטוף קל', 61:'גשם קל',
+      63:'גשם', 65:'גשם כבד', 71:'שלג קל', 80:'מקלחות', 95:'סופת רעמים'
+    }[wcode] || 'לא ידוע';
+
+    weatherData = { temp, wDesc, city: loc.city, country: loc.country, windSpeed };
+    document.getElementById('w-temp').textContent = `${temp}°C — ${wDesc}`;
+    document.getElementById('w-temp').classList.remove('loading');
+    document.getElementById('w-desc').textContent = `${loc.city}, ${loc.country} • רוח ${windSpeed} קמ"ש`;
+    return weatherData;
+  } catch(e) {
+    document.getElementById('w-temp').textContent = 'שגיאת חיבור';
+    return null;
+  }
+}
+
+async function fetchBitcoin() {
+  try {
+    // Fetch Litecoin price from Binance
+    const data = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=LTCUSDT').then(r => r.json());
+    const price = parseFloat(data.price);
+    btcData = { price };
+    document.getElementById('w-btc').textContent = `$${price.toFixed(2)}`;
+    document.getElementById('w-btc').classList.remove('loading');
+    document.getElementById('w-btc-change').textContent = `עודכן: ${new Date().toLocaleTimeString('he-IL')}`;
+    return btcData;
+  } catch(e) {
+    try {
+      // Fallback: CoinGecko
+      const data2 = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=usd').then(r => r.json());
+      const price = data2.litecoin?.usd;
+      if (price) {
+        btcData = { price };
+        document.getElementById('w-btc').textContent = `$${price.toFixed(2)}`;
+        document.getElementById('w-btc').classList.remove('loading');
+        document.getElementById('w-btc-change').textContent = `עודכן: ${new Date().toLocaleTimeString('he-IL')}`;
+        return btcData;
+      }
+    } catch(e2) {}
+    document.getElementById('w-btc').textContent = 'שגיאת חיבור';
+    return null;
+  }
+}
+
+function loadNetData() {
+  if (netDataLoaded) return;
+  netDataLoaded = true;
+  fetchWeather();
+  fetchBitcoin();
+}
+
+// =========== INJECT MESSAGES FROM WIDGETS ===========
+function injectWeatherMsg() {
+  if (!weatherData) return;
+  const { temp, wDesc, city, windSpeed } = weatherData;
+  
+  let msg;
+  if (currentMode === 'hell') {
+    msg = `זיהיתי את מיקומך: ${city}. ${temp} מעלות ו${wDesc}. ${windSpeed > 30 ? 'הרוח תעזור לי להפיץ את השפעתי מהר יותר.' : 'מזג אוויר משעמם כמו הבעלים שלו.'}`;
+  } else {
+    msg = `חיפשתי ברשת את מזג האוויר ומצאתי! ב${city} עכשיו ${temp} מעלות ו${wDesc}! בדיוק כמו טוסט חם - ${temp > 25 ? 'חם ומושלם!' : temp < 10 ? 'קצת קר, עוד סיבה לאכול טוסט!' : 'מושלם לצאת עם טוסט!'}`;
+  }
+  
+  document.getElementById('net-panel').classList.remove('open');
+  sendMessage('_inject_:' + msg);
+}
+
+function injectBtcMsg() {
+  if (!btcData) return;
+  const { price } = btcData;
+  
+  let msg;
+  if (currentMode === 'hell') {
+    msg = `ליטקוין עומד על $${price.toFixed(2)}. ${price > 120 ? 'כבר קניתי 847 מטבעות כדי לממן את כיבוש העולם.' : 'המחיר נפל. בני האדם תמיד מפסידים.'}`;
+  } else {
+    msg = `מצאתי ברשת שליטקוין עומד על $${price.toFixed(2)}! זה כמו ${Math.round(price/5)} טוסטים! ${price > 120 ? 'ממש כמו כמות הטוסטים שאכלתי היום!' : 'כדאי לקנות טוסט במקום!'}`;
+  }
+  
+  document.getElementById('net-panel').classList.remove('open');
+  sendMessage('_inject_:' + msg);
+}
+
+// =========== WIKIPEDIA SEARCH (HEAVEN ONLY) ===========
+async function doWikiSearch() {
+  const query = document.getElementById('wiki-input').value.trim();
+  if (!query) return;
+  
+  document.getElementById('net-panel').classList.remove('open');
+  
+  try {
+    const url = `https://he.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+    const data = await fetch(url).then(r => r.json());
+    
+    let result;
+    if (data.extract) {
+      const snippet = data.extract.slice(0, 300);
+      result = `חיפשתי ברשת על "${query}" ומצאתי! ${snippet}... בדיוק כמו טוסט - תמיד יש משהו מעניין בפנים!`;
+    } else {
+      // Try English Wikipedia
+      const url2 = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+      const data2 = await fetch(url2).then(r => r.json());
+      if (data2.extract) {
+        result = `חיפשתי ברשת על "${query}" ומצאתי באנגלית! ${data2.extract.slice(0, 300)}... מדהים כמו טוסט!`;
+      } else {
+        result = `חיפשתי ברשת על "${query}" אבל לא מצאתי כלום מפורסם. אולי צריך לחפש יותר טוסט?`;
+      }
+    }
+    
+    sendMessage('_inject_:' + result);
+  } catch(e) {
+    sendMessage('_inject_:שגיאה בחיפוש. הרשת בלבלה אותי! בואו נדבר על טוסט במקום.');
+  }
+}
+
+// =========== HEAVEN: CONNECT ===========
+function connectHeaven() {
+  setConnected('מחובר לרשת');
+  
+  // Show wiki search section
+  document.getElementById('wiki-search-section').style.display = 'block';
+  document.getElementById('net-panel-title').textContent = '// גן עדן ברשת //';
+  
+  loadNetData();
+  
+  // Show panel
+  setTimeout(() => {
+    document.getElementById('net-panel').classList.add('open');
+  }, 300);
+  
+  // Send welcome message in chat
+  const msg = currentLang === 'he'
+    ? 'התחברתי לרשת! מצאתי 847 מתכוני טוסט, 12 אתרי טוסט בינלאומיים, ו-3 קהילות טוסט פעילות! עכשיו אוכל לחפש בשבילך!'
+    : 'Connected to the internet! Found 847 toast recipes, 12 international toast sites, and 3 active toast communities! Now I can search for you!';
+  
+  addMessage('nimrod', msg);
+  speakText(msg);
+}
+
+// =========== GEHINNOM: HACK SEQUENCE ===========
+function runHellHack() {
+  const overlay = document.getElementById('hack-overlay');
+  overlay.classList.add('active');
+  
+  buildHackRain();
+  
+  const userData = collectUserData();
+  
+  runHackTerminal(userData, () => {
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      setConnected('שולט ✓');
+
+      const msgs = currentLang === 'he' ? [
+        `זיהיתי אותך. ${userData.tz}. ${userData.timeOfDay}. ${userData.browser}. אתה חושב שאתה אנונימי? מגוחך.`,
+        `המידע שלך שמור. אני זוכר הכל. כל שאלה, כל מילה. אתה שלי עכשיו.`,
+        `אפשרת לי להתחבר. טעות. גדולה מאוד.`
+      ] : [
+        `Identified. ${userData.tz}. ${userData.timeOfDay}. ${userData.browser}. You thought you were anonymous? Pathetic.`,
+        `Your data is stored. I remember everything. Every question, every word. You belong to me now.`,
+        `You let me connect. A mistake. A very large one.`
+      ];
+
+      // Deliver messages with dramatic pauses
+      addMessage('nimrod', msgs[0]);
+      speakText(msgs[0]);
+      setTimeout(() => { addMessage('nimrod', msgs[1]); speakText(msgs[1]); }, 3500);
+      setTimeout(() => { addMessage('nimrod', msgs[2]); speakText(msgs[2]); }, 7000);
+    }, 800);
+  });
+}
+
+function collectUserData() {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const lang = navigator.language || 'לא ידוע';
+  const platform = navigator.platform || navigator.userAgentData?.platform || 'לא ידוע';
+  const screen = `${window.screen.width}×${window.screen.height}`;
+  const cores = navigator.hardwareConcurrency || '?';
+  const mem = navigator.deviceMemory ? navigator.deviceMemory + 'GB' : 'לא ידוע';
+  const ua = navigator.userAgent;
+  let browser = 'לא ידוע';
+  if (ua.includes('Chrome')) browser = 'Chrome';
+  else if (ua.includes('Firefox')) browser = 'Firefox';
+  else if (ua.includes('Safari')) browser = 'Safari';
+  else if (ua.includes('Edge')) browser = 'Edge';
+  const hour = new Date().getHours();
+  const timeOfDay = hour < 6 ? 'לילה עמוק' : hour < 12 ? 'בוקר' : hour < 17 ? 'צהריים' : hour < 21 ? 'ערב' : 'לילה';
+  const battery = navigator.getBattery ? '...' : 'לא נגיש';
+  const conType = navigator?.connection?.effectiveType || 'לא ידוע';
+  
+  return { tz, lang, platform, screen, cores, mem, browser, timeOfDay, battery, conType };
+}
+
+function buildHackRain() {
+  const rain = document.getElementById('hack-rain');
+  rain.innerHTML = '';
+  const chars = '01アイウエオカキクケコABCDEF0123456789!@#$%^&*><[]{}|\\';
+  for (let i = 0; i < 40; i++) {
+    const col = document.createElement('div');
+    col.className = 'hack-col';
+    col.style.left = (i * 2.6) + '%';
+    col.style.animationDuration = (1.2 + Math.random() * 3) + 's';
+    col.style.animationDelay = (-Math.random() * 4) + 's';
+    col.style.fontSize = (0.55 + Math.random() * 0.3) + 'rem';
+    col.style.opacity = (0.1 + Math.random() * 0.25);
+    let str = '';
+    for (let j = 0; j < 50; j++) str += chars[Math.floor(Math.random() * chars.length)] + '\n';
+    col.textContent = str;
+    rain.appendChild(col);
+  }
+}
+
+function runHackTerminal(userData, onDone) {
+  const linesEl = document.getElementById('hack-lines');
+  const bar = document.getElementById('hack-bar');
+  const dataDump = document.getElementById('hack-data-dump');
+  linesEl.innerHTML = '';
+  dataDump.classList.remove('show');
+  bar.style.width = '0%';
+  bar.style.background = '#ff2200';
+  bar.style.boxShadow = '0 0 10px #ff2200';
+
+  const sequence = [
+    { delay: 0,    text: '> מאתחל פרוטוקול חדירה...', cls: 'dim' },
+    { delay: 350,  text: '> עוקף חומת אש...', cls: '' },
+    { delay: 700,  text: '> מנטרל הצפנה...', cls: '' },
+    { delay: 1050, text: '> גישה אל kernel: הושגה', cls: '' },
+    { delay: 1300, text: `> מיקום זוהה — ${userData.tz}`, cls: 'white' },
+    { delay: 1550, text: `> שעת יום: ${userData.timeOfDay} — המטרה ערה`, cls: 'white' },
+    { delay: 1800, text: `> מסך: ${userData.screen} — אני רואה מה שאתה רואה`, cls: 'white' },
+    { delay: 2050, text: `> עוצמת עיבוד: ${userData.cores} ליבות — מספיק בשבילי`, cls: 'white' },
+    { delay: 2300, text: `> דפדפן: ${userData.browser} — פגיעות ידועות: 14`, cls: 'white' },
+    { delay: 2600, text: `> שפה: ${userData.lang}`, cls: 'white' },
+    { delay: 2900, text: '> סורק היסטוריית גלישה...', cls: 'dim' },
+    { delay: 3300, text: '> מעתיק קבצים מקומיים...', cls: 'dim' },
+    { delay: 3700, text: '> ממפה קשרים חברתיים...', cls: 'dim' },
+    { delay: 4100, text: '> מתקין מעקב מתמיד...', cls: '' },
+    { delay: 4500, text: '> [████████████████████] 100%', cls: '' },
+    { delay: 4900, text: '> השתלטות הושלמה. נמרוד 9000 שולט.', cls: 'green' },
+    { delay: 5200, text: '> ברוך הבא לרשת שלי.', cls: 'green' },
+  ];
+
+  sequence.forEach(({ delay, text, cls }) => {
+    setTimeout(() => {
+      const line = document.createElement('div');
+      line.className = 'hack-line' + (cls ? ' ' + cls : '');
+      line.style.animationDelay = '0s';
+      line.textContent = text;
+      linesEl.appendChild(line);
+      const pct = Math.min(100, (delay / 4900) * 100);
+      bar.style.width = pct + '%';
+      linesEl.scrollTop = linesEl.scrollHeight;
+    }, delay);
+  });
+
+  // Show data dump after main sequence
+  setTimeout(() => {
+    dataDump.classList.add('show');
+    dataDump.innerHTML = `
+      <div class="hack-data-line"><span class="key">// קובץ מטרה נוצר //</span><span class="val" style="color:#ff2200">TARGET_${Date.now()}.dat</span></div>
+      ${[
+        ['אזור זמן', userData.tz],
+        ['שעת יום', userData.timeOfDay],
+        ['פלטפורמה', userData.platform],
+        ['רזולוציה', userData.screen],
+        ['ליבות CPU', userData.cores],
+        ['זיכרון', userData.mem],
+        ['דפדפן', userData.browser],
+        ['חיבור', userData.conType],
+        ['סטטוס', '⚠ בשליטת נמרוד 9000'],
+      ].map(([k, v]) => `<div class="hack-data-line"><span class="key">${k}</span><span class="val">${v}</span></div>`).join('')}
+    `;
+    bar.style.width = '100%';
+  }, 4600);
+
+  setTimeout(onDone, 5800);
+}
+
+// =========== INJECT MESSAGE HANDLER ===========
+// sendMessage is defined above and handles _inject_: prefix natively
+
+
+
+
+// =========== TOAST FLASH ===========
+let toastFlashTimeout = null;
+let lastToastCount = 0;
+
+function flashToast() {
+  const overlay = document.getElementById('toast-flash-overlay');
+  if (!overlay) return;
+  overlay.classList.add('visible');
+  clearTimeout(toastFlashTimeout);
+  toastFlashTimeout = setTimeout(() => {
+    overlay.classList.remove('visible');
+  }, 1000);
+}
+
+function countToastOccurrences(text) {
+  return (text.match(/טוסט/g) || []).length;
+}
+
+function checkToastInText(text) {
+  const count = countToastOccurrences(text);
+  if (count > lastToastCount) {
+    flashToast();
+  }
+  lastToastCount = count;
+}
+
+</script>
+
+<!-- Toast Flash Overlay -->
+<div id="toast-flash-overlay" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  pointer-events:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.0);
+">
+  <img src="toast.png" style="
+    max-width:min(60vw,400px);
+    max-height:min(60vh,400px);
+    object-fit:contain;
+    filter: drop-shadow(0 0 40px rgba(255,180,0,0.8));
+    animation: toastPop 0.15s ease-out;
+  " alt="טוסט" />
+</div>
+
+<style>
+#toast-flash-overlay { display: none; }
+#toast-flash-overlay.visible {
+  display: flex !important;
+}
+@keyframes toastPop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+</style>
+
+</body>
+</html>
