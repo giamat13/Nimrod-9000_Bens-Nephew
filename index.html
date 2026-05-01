@@ -2366,6 +2366,12 @@ function saveState() {
   } catch(e) {}
 }
 
+// =========== CONNECT BUTTON LOGIC ===========
+let isConnected = false;
+let netDataLoaded = false;
+let weatherData = null;
+let btcData = null;
+
 function restoreState() {
   try {
     const raw = localStorage.getItem('nimrod_state');
@@ -2406,7 +2412,14 @@ function restoreState() {
       const label = currentMode === 'hell' ? 'שולט ✓' : 'מחובר לרשת';
       const btn = document.getElementById('connect-btn');
       const lbl = document.getElementById('connect-btn-label');
-      if (btn) btn.classList.add('connected');
+      if (btn) {
+        btn.classList.add('connected');
+        if (currentMode === 'hell') {
+          btn.disabled = true;
+          btn.style.opacity = '0.5';
+          btn.style.cursor = 'not-allowed';
+        }
+      }
       if (lbl) lbl.textContent = label;
     }
 
@@ -2422,16 +2435,11 @@ const _origAddMessagePersist = window.addMessage;
 window.addMessage = function(role, text) {
   _origAddMessagePersist(role, text);
   setTimeout(saveState, 100);
+  if (role === 'nimrod' && /טוסט/.test(text)) flashToast();
 };
 
 // Try restore on load
 restoreState();
-
-// =========== CONNECT BUTTON LOGIC ===========
-let isConnected = false;
-let netDataLoaded = false;
-let weatherData = null;
-let btcData = null;
 
 function handleConnectBtn() {
   if (currentMode === 'hell') {
@@ -2820,15 +2828,6 @@ function checkToastInText(text) {
   }
   lastToastCount = count;
 }
-
-// Patch addMessage to detect toast in nimrod messages
-const _origAddMessage = addMessage;
-window.addMessage = function(role, text) {
-  _origAddMessage(role, text);
-  if (role === 'nimrod' && /טוסט/.test(text)) {
-    flashToast();
-  }
-};
 
 </script>
 
