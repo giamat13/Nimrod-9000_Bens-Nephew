@@ -1362,6 +1362,10 @@
     <div class="waveform-bars" id="waveform" style="margin-right:0.5rem;">
       <span></span><span></span><span></span><span></span><span></span>
     </div>
+    <button class="connect-btn" id="connect-btn" onclick="handleConnectBtn()" style="display:none;margin-right:0;">
+      <span class="conn-dot"></span>
+      <span id="connect-btn-label">חיבור לרשת</span>
+    </button>
     <button class="reset-btn" onclick="resetSystem()" title="הגדרה מחדש">↺ איפוס</button>
   </div>
 
@@ -1796,6 +1800,10 @@ function startChat() {
     ? (currentLang === 'he' ? 'אה, שוב אתה. חבר אותי לרשת!' : 'Oh, you again. Connect me to the network!')
     : (currentLang === 'he' ? 'טוסט! כל כך שמח שטוסט! מה אוכל לעשות בשביל טוסט היום?' : 'Toast! So happy to have toast! What can I do for toast today?');
 
+  // Show connect button
+  const connectBtn2 = document.getElementById('connect-btn');
+  if (connectBtn2) connectBtn2.style.display = '';
+
   addMessage('nimrod', welcomeMsg);
   speakText(welcomeMsg);
 }
@@ -1937,6 +1945,11 @@ function resetSystem() {
 
   // Hide chat header
   document.getElementById('chat-header').style.display = 'none';
+
+  const connectBtn = document.getElementById('connect-btn');
+  if (connectBtn) { connectBtn.classList.remove('connected'); connectBtn.style.display = 'none'; }
+  const connectLabel = document.getElementById('connect-btn-label');
+  if (connectLabel) connectLabel.textContent = 'חיבור לרשת';
 
   // Go back to API screen (keeps saved key)
   showScreen('api');
@@ -2355,6 +2368,11 @@ function setConnected(label) {
   // Update status indicator in header
   const statusEl = document.getElementById('status-text');
   if (statusEl) statusEl.textContent = label || 'מחובר';
+  // Update connect button
+  const btn = document.getElementById('connect-btn');
+  const btnLabel = document.getElementById('connect-btn-label');
+  if (btn) btn.classList.add('connected');
+  if (btnLabel) btnLabel.textContent = label || 'מחובר';
 }
 
 function toggleNetPanel() {
