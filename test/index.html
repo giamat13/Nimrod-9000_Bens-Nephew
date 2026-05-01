@@ -607,29 +607,8 @@
 <!-- ===== SCREEN 3: CHAT ===== -->
 <div id="screen-chat" class="screen" style="justify-content: flex-start; padding: 0;">
 
-<div class="chat-header" id="chat-header">
-    <div class="nimrod-mini">
-      <div id="svg-container-mini" style="width: 50px; height: 40px;"></div>
-    </div>
-    <div class="chat-header-info">
-      <h2 id="chat-mode-label">נמרוד 9000 // גיהינום</h2>
-      <div class="status"><span class="status-dot"></span><span id="chat-status">מוכן לפקודות</span></div>
-    </div>
-    <div style="margin-right: auto; display: flex; align-items: center; gap: 8px;">
-      <div class="waveform-bars" id="waveform">
-        <span></span><span></span><span></span><span></span><span></span>
-      </div>
-    </div>
-  </div>
-
-  <div class="chat-messages" id="chat-messages"></div>
-
-<div class="chat-bottom">
-    <div class="transcript-indicator" id="transcript-indicator"></div>
-    <div class="chat-input-inner" style="justify-content: center;">
-      <input type="text" id="chat-text" class="chat-textinput" placeholder="הקלד הודעה..." />
-    </div>
-  </div>
+<div id="transcript-indicator" style="position:fixed;bottom:1rem;width:100%;text-align:center;font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:1px;"></div>
+  <div id="svg-container-chat" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(90vw,calc(90vh*690/430));height:min(90vh,calc(90vw*430/690));"></div>
 </div>
 
 <script>
@@ -808,12 +787,10 @@ function selectLang(btn) {
 function startChat() {
   if (!currentMode) { selectMode('hell'); }
 
-  // Update chat UI
-  const modeLabel = currentMode === 'hell' ? 'גיהינום' : 'גן עדן';
-  document.getElementById('chat-mode-label').textContent = `נמרוד 9000 // ${modeLabel}`;
-  loadFaces();
-
   showScreen('chat');
+
+  const svgFile = currentMode === 'hell' ? 'גיהינום.svg' : 'גן עדן.svg';
+  loadSVG('svg-container-chat', svgFile);
 
   // Welcome message
   const welcomeMsg = currentMode === 'hell'
@@ -835,48 +812,14 @@ function showScreen(name) {
   document.getElementById('screen-' + name).classList.add('active');
 }
 
-// =========== CHAT ===========
-function addMessage(role, text) {
-  const container = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = `message ${role}`;
+function setStatus(text) {}
 
-  const avatar = document.createElement('div');
-  avatar.className = `msg-avatar ${role === 'nimrod' ? 'nimrod-avatar' : 'user-avatar'}`;
-  avatar.textContent = role === 'nimrod' ? '🤖' : '👤';
+function setWaveform(active) {}
 
-  const bubble = document.createElement('div');
-  bubble.className = 'msg-bubble';
-  bubble.textContent = text;
-
-  div.appendChild(avatar);
-  div.appendChild(bubble);
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-  return bubble;
-}
+function addMessage(role, text) {}
 
 function addStreamingMessage() {
-  const container = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'message nimrod';
-
-  const avatar = document.createElement('div');
-  avatar.className = 'msg-avatar nimrod-avatar';
-  avatar.textContent = '🤖';
-
-  const bubble = document.createElement('div');
-  bubble.className = 'msg-bubble';
-
-  const cursor = document.createElement('span');
-  cursor.className = 'cursor-blink';
-  bubble.appendChild(cursor);
-
-  div.appendChild(avatar);
-  div.appendChild(bubble);
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-  return { bubble, cursor };
+  return { bubble: { textContent: '', appendChild: () => {} }, cursor: { remove: () => {} } };
 }
 
 // Build system prompt
@@ -892,13 +835,10 @@ function getSystemPrompt() {
 let conversationHistory = [];
 
 async function sendMessage(text) {
-  const input = document.getElementById('chat-text');
-  const userText = text || input.value.trim();
-  if (!userText) return;
+  if (!text) return;
 
-  input.value = '';
-  addMessage('user', userText);
-  conversationHistory.push({ role: 'user', content: userText });
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
 
   // Stop any current speech
   window.speechSynthesis.cancel();
@@ -975,8 +915,8 @@ setStatus('מדבר...');
 
           // Update bubble text
           bubble.textContent = fullText;
+          document.getElementById('transcript-indicator').textContent = `💬 ${fullText}`;
           bubble.appendChild(cursor);
-          document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
 
           // Speak in chunks - when we hit sentence boundaries
           const sentenceEnd = /[.!?،؟\n]/;
@@ -1120,16 +1060,6 @@ function startRecording() {
   recognition.start();
 }
 
-// =========== UI HELPERS ===========
-function setStatus(text) {
-  document.getElementById('chat-status').textContent = text;
-}
-
-function setWaveform(active) {
-  const wf = document.getElementById('waveform');
-  if (active) wf.parentElement.parentElement.classList.add('speaking');
-  else wf.parentElement.parentElement.classList.remove('speaking');
-}
 
 // Load voices on startup
 window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
@@ -1138,15 +1068,7 @@ window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoice
 checkSavedApiKey();
 loadFaces();
 
-// Add keyboard support for chat input
-document.getElementById('chat-text').addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    const text = e.target.value.trim();
-    if (text) {
-      sendMessage(text);
-    }
-  }
-});
+
 </script>
 </body>
 </html>
